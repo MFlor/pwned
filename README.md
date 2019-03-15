@@ -18,8 +18,8 @@ require_once './vendor/autoload.php';
 $pwned = new \MFlor\Pwned\Pwned();
 ```
 
-### Usage
-#### Breaches
+## Usage
+### Breaches
 
 ```php
 // Get all breaches
