@@ -17,14 +17,20 @@ class ExceptionTest extends RepositoryTestCase
      *
      * @param Response $response
      * @param string $expectedException
+     * @param int $statusCode
+     * @param string $reasonPhrase
      */
-    public function testAllBreachesCanHandleBadResponses(Response $response, string $expectedException)
-    {
+    public function testAllBreachesCanHandleBadResponses(
+        Response $response,
+        string $expectedException,
+        int $statusCode,
+        string $reasonPhrase
+    ) {
         $repository = $this->getRepository($response);
         try {
             $repository->getAll();
-        } catch (\Exception $exception) {
-            $this->assertInstanceOf($expectedException, $exception);
+        } catch (AbstractException $exception) {
+            $this->assertException($expectedException, $exception, $statusCode, $reasonPhrase);
             return;
         }
         $this->fail('Failed throwing an exception!');
@@ -35,15 +41,21 @@ class ExceptionTest extends RepositoryTestCase
      *
      * @param Response $response
      * @param string $expectedException
+     * @param int $statusCode
+     * @param string $reasonPhrase
      */
-    public function testGetByDomainBreachesCanHandleBadResponses(Response $response, string $expectedException)
-    {
+    public function testGetByDomainBreachesCanHandleBadResponses(
+        Response $response,
+        string $expectedException,
+        int $statusCode,
+        string $reasonPhrase
+    ) {
         $repository = $this->getRepository($response);
 
         try {
             $repository->byDomain('adobe.com');
-        } catch (\Exception $exception) {
-            $this->assertInstanceOf($expectedException, $exception);
+        } catch (AbstractException $exception) {
+            $this->assertException($expectedException, $exception, $statusCode, $reasonPhrase);
             return;
         }
 
@@ -55,15 +67,21 @@ class ExceptionTest extends RepositoryTestCase
      *
      * @param Response $response
      * @param string $expectedException
+     * @param int $statusCode
+     * @param string $reasonPhrase
      */
-    public function testGetByNameBreachesCanHandleBadResponses(Response $response, string $expectedException)
-    {
+    public function testGetByNameBreachesCanHandleBadResponses(
+        Response $response,
+        string $expectedException,
+        int $statusCode,
+        string $reasonPhrase
+    ) {
         $repository = $this->getRepository($response);
 
         try {
             $repository->byName('Adobe');
-        } catch (\Exception $exception) {
-            $this->assertInstanceOf($expectedException, $exception);
+        } catch (AbstractException $exception) {
+            $this->assertException($expectedException, $exception, $statusCode, $reasonPhrase);
             return;
         }
         $this->fail('Failed throwing an exception!');
@@ -74,15 +92,21 @@ class ExceptionTest extends RepositoryTestCase
      *
      * @param Response $response
      * @param string $expectedException
+     * @param int $statusCode
+     * @param string $reasonPhrase
      */
-    public function testGetByAccountBreachesCanHandleBadResponses(Response $response, string $expectedException)
-    {
+    public function testGetByAccountBreachesCanHandleBadResponses(
+        Response $response,
+        string $expectedException,
+        int $statusCode,
+        string $reasonPhrase
+    ) {
         $repository = $this->getRepository($response);
 
         try {
             $repository->byAccount('test@example.com');
-        } catch (\Exception $exception) {
-            $this->assertInstanceOf($expectedException, $exception);
+        } catch (AbstractException $exception) {
+            $this->assertException($expectedException, $exception, $statusCode, $reasonPhrase);
             return;
         }
         $this->fail('Failed throwing an exception!');
@@ -93,15 +117,21 @@ class ExceptionTest extends RepositoryTestCase
      *
      * @param Response $response
      * @param string $expectedException
+     * @param int $statusCode
+     * @param string $reasonPhrase
      */
-    public function testGetDataClassesCanHandleBadResponses(Response $response, string $expectedException)
-    {
+    public function testGetDataClassesCanHandleBadResponses(
+        Response $response,
+        string $expectedException,
+        int $statusCode,
+        string $reasonPhrase
+    ) {
         $repository = $this->getRepository($response);
 
         try {
             $repository->getDataClasses();
-        } catch (\Exception $exception) {
-            $this->assertInstanceOf($expectedException, $exception);
+        } catch (AbstractException $exception) {
+            $this->assertException($expectedException, $exception, $statusCode, $reasonPhrase);
             return;
         }
         $this->fail('Failed throwing an exception!');

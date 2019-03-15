@@ -39,4 +39,11 @@ jobs:
           paths:
             - ./vendor
 
-      - run: composer test
+      - run:
+          name: "Run tests"
+          command: phpdbg -qrr vendor/bin/phpunit --coverage-clover build/coverage.xml
+      - store_artifacts:
+          path:  build/coverage.xml
+      - run:
+          name: "Push coverage report to Coveralls"
+          command: vendor/bin/php-coveralls --coverage_clover=build/coverage.xml --json_path=build/coveralls-upload.json

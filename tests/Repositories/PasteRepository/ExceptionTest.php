@@ -18,15 +18,21 @@ class ExceptionTest extends RepositoryTestCase
      *
      * @param Response $response
      * @param string $expectedException
+     * @param int $statusCode
+     * @param string $reasonPhrase
      */
-    public function testGetByAccountCanHandleBadResponses(Response $response, string $expectedException)
-    {
+    public function testGetByAccountCanHandleBadResponses(
+        Response $response,
+        string $expectedException,
+        int $statusCode,
+        string $reasonPhrase
+    ) {
         $repository = $this->getRepository($response);
 
         try {
             $result = $repository->byAccount('test@example.com');
-        } catch (\Exception $exception) {
-            $this->assertInstanceOf($expectedException, $exception);
+        } catch (AbstractException $exception) {
+            $this->assertException($expectedException, $exception, $statusCode, $reasonPhrase);
             return;
         }
 

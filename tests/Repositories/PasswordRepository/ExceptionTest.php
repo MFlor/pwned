@@ -17,15 +17,21 @@ class ExceptionTest extends RepositoryTestCase
      *
      * @param Response $response
      * @param string $expectedException
+     * @param int $statusCode
+     * @param string $reasonPhrase
      */
-    public function testSearchCanHandleBadResponse(Response $response, string $expectedException)
-    {
+    public function testSearchCanHandleBadResponse(
+        Response $response,
+        string $expectedException,
+        int $statusCode,
+        string $reasonPhrase
+    ) {
         $repository = $this->getRepository($response);
 
         try {
             $repository->search('abc12');
-        } catch (\Exception $exception) {
-            $this->assertInstanceOf($expectedException, $exception);
+        } catch (AbstractException $exception) {
+            $this->assertException($expectedException, $exception, $statusCode, $reasonPhrase);
             return;
         }
         $this->fail('Failed throwing an exception!');
@@ -36,15 +42,21 @@ class ExceptionTest extends RepositoryTestCase
      *
      * @param Response $response
      * @param string $expectedException
+     * @param int $statusCode
+     * @param string $reasonPhrase
      */
-    public function testOccurencesCanHandleBadResponse(Response $response, string $expectedException)
-    {
+    public function testOccurencesCanHandleBadResponse(
+        Response $response,
+        string $expectedException,
+        int $statusCode,
+        string $reasonPhrase
+    ) {
         $repository = $this->getRepository($response);
 
         try {
             $repository->occurences('password1');
-        } catch (\Exception $exception) {
-            $this->assertInstanceOf($expectedException, $exception);
+        } catch (AbstractException $exception) {
+            $this->assertException($expectedException, $exception, $statusCode, $reasonPhrase);
             return;
         }
         $this->fail('Failed throwing an exception!');

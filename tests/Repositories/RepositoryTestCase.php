@@ -8,6 +8,7 @@ use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
+use MFlor\Pwned\Exceptions\AbstractException;
 use MFlor\Pwned\Exceptions\BadRequestException;
 use MFlor\Pwned\Exceptions\ForbiddenException;
 use MFlor\Pwned\Exceptions\NotFoundException;
@@ -22,11 +23,42 @@ class RepositoryTestCase extends TestCase
     public function badResponseProvider()
     {
         return [
-            'Bad request' => [new Response(400, [], 'Bad request'), BadRequestException::class],
-            'Forbidden' => [new Response(403, [], 'Forbidden'), ForbiddenException::class],
-            'Not found' => [new Response(404, [], 'Not found'), NotFoundException::class],
-            'Too many requests' => [new Response(429, [], 'Too many requests'), TooManyRequestsException::class],
+            'Bad request' => [
+                new Response(400, [], 'Bad request'),
+                BadRequestException::class,
+                400,
+                'Bad Request'
+            ],
+            'Forbidden' => [
+                new Response(403, [], 'Forbidden'),
+                ForbiddenException::class,
+                403,
+                'Forbidden'
+            ],
+            'Not found' => [
+                new Response(404, [], 'Not found'),
+                NotFoundException::class,
+                404,
+                'Not Found'
+            ],
+            'Too many requests' => [
+                new Response(429, [], 'Too many requests'),
+                TooManyRequestsException::class,
+                429,
+                'Too Many Requests'
+            ],
         ];
+    }
+
+    protected function assertException(
+        string $expected,
+        AbstractException $actual,
+        int $statusCode,
+        string $reasonPhrase
+    ) {
+        $this->assertInstanceOf($expected, $actual);
+        $this->assertSame($statusCode, $actual->getStatusCode());
+        $this->assertSame($reasonPhrase, $actual->getReasonPhrase());
     }
 
     protected function getClientWithResponse(string $data): Client
