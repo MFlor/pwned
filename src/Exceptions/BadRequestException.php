@@ -2,7 +2,7 @@
 
 namespace MFlor\Pwned\Exceptions;
 
-class BadRequestException extends \Exception
+class BadRequestException extends AbstractException
 {
-
+    const STATUS_CODE = 400;
 }

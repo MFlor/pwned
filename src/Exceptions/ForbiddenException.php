@@ -2,7 +2,7 @@
 
 namespace MFlor\Pwned\Exceptions;
 
-class ForbiddenException extends \Exception
+class ForbiddenException extends AbstractException
 {
-
+    const STATUS_CODE = 403;
 }

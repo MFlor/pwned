@@ -2,7 +2,7 @@
 
 namespace MFlor\Pwned\Exceptions;
 
-class TooManyRequestsException extends \Exception
+class TooManyRequestsException extends AbstractException
 {
-
+    const STATUS_CODE = 429;
 }
