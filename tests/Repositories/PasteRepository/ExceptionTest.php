@@ -6,10 +6,8 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
-use MFlor\Pwned\Exceptions\BadRequestException;
-use MFlor\Pwned\Exceptions\ForbiddenException;
+use MFlor\Pwned\Exceptions\AbstractException;
 use MFlor\Pwned\Exceptions\NotFoundException;
-use MFlor\Pwned\Exceptions\TooManyRequestsException;
 use MFlor\Pwned\Repositories\PasteRepository;
 use MFlor\Pwned\Tests\Repositories\RepositoryTestCase;
 
@@ -48,10 +46,7 @@ class ExceptionTest extends RepositoryTestCase
         try {
             $repository->byAccount('test@example.com');
         } catch (\Exception $exception) {
-            $this->assertNotInstanceOf(BadRequestException::class, $exception);
-            $this->assertNotInstanceOf(ForbiddenException::class, $exception);
-            $this->assertNotInstanceOf(NotFoundException::class, $exception);
-            $this->assertNotInstanceOf(TooManyRequestsException::class, $exception);
+            $this->assertNotInstanceOf(AbstractException::class, $exception);
             return;
         }
         $this->fail('Failed throwing an exception!');

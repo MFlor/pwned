@@ -72,6 +72,22 @@ $pwned->passwords()->occurences('password1');
 // Returns the number occurences of the given password has been found in leaks
 ```
 
+### Exceptions
+This package will throw custom exceptions if a Client Error occures.
+`\Mflor\Pwned\Exceptions\BadRequestException` is thrown on status code 400
+`\Mflor\Pwned\Exceptions\ForbiddenException` is thrown on status code 403
+`\Mflor\Pwned\Exceptions\NotFoundException` is thrown on status code 404
+`\Mflor\Pwned\Exceptions\TooManyRequestsException` is thrown on status code 429
+
+**Note** 
+
+| Code |                   Description                                                                   |
+|------|-------------------------------------------------------------------------------------------------|
+| 400  | Bad request — the account does not comply with an acceptable format (i.e. it's an empty string) |
+| 403  | Forbidden — no user agent has been specified in the request                                     |
+| 404  | Not found — the account could not be found and has therefore not been pwned                     |
+| 429  | Too many requests — the rate limit has been exceeded                                            |
+
 ## Testing
 You can run all tests by executing either of the following commands:
 ```bash

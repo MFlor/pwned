@@ -5,16 +5,18 @@ namespace MFlor\Pwned\Exceptions;
 abstract class AbstractException extends \Exception implements ExceptionInterface
 {
     private $reasonPhrase;
+    private $statusCode;
 
-    public function __construct(string $reasonPhrase)
+    public function __construct(string $reasonPhrase, int $statusCode)
     {
         $this->reasonPhrase = $reasonPhrase;
-        parent::__construct(sprintf('%s: %s', static::STATUS_CODE, $this->reasonPhrase));
+        $this->statusCode = $statusCode;
+        parent::__construct(sprintf('%s: %s', $this->statusCode, $this->reasonPhrase));
     }
 
     public function getStatusCode(): int
     {
-        return static::STATUS_CODE;
+        return $this->statusCode;
     }
 
     public function getReasonPhrase(): string
