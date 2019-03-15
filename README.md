@@ -1,5 +1,5 @@
 # Pwned [![CircleCI](https://circleci.com/gh/MFlor/pwned.svg?style=svg)](https://circleci.com/gh/MFlor/pwned)
-#### A PHP library for interacting with [HaveIBeenPwned.com's](https://haveibeenpwned.com/API/v2) API
+#### A clean and simple PHP library for interacting with all [HaveIBeenPwned.com's](https://haveibeenpwned.com/API/v2) API endpoints
 
 This package wraps the entire HaveIBeenPwned API in a simple, easy to use, PHP library, that can be used in any project.
 
