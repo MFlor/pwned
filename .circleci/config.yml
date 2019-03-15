@@ -39,4 +39,8 @@ jobs:
           paths:
             - ./vendor
 
-      - run: composer test
+      - run:
+          name: "Run tests"
+          command: phpdbg -qrr vendor/bin/phpunit --coverage-html build/coverage-report
+      - store_artifacts:
+          path:  build/coverage-report
