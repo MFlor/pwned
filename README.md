@@ -1,6 +1,10 @@
 # Pwned [![CircleCI](https://circleci.com/gh/MFlor/pwned.svg?style=svg)](https://circleci.com/gh/MFlor/pwned)
 #### A PHP library for interacting with [HaveIBeenPwned.com's](https://haveibeenpwned.com/API/v2) API
 
+This package wraps the entire HaveIBeenPwned API in a simple, easy to use, PHP library, that can be used in any project.
+
+Many other packages wrapping the API, are either supposed to be used in a framework, or only wraps the password checker.
+
 ## Installation
 Install the library with composer:
 ```bash
@@ -18,8 +22,8 @@ require_once './vendor/autoload.php';
 $pwned = new \MFlor\Pwned\Pwned();
 ```
 
-### Usage
-#### Breaches
+## Usage
+### Breaches
 
 ```php
 // Get all breaches
