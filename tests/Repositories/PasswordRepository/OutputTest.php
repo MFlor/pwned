@@ -61,7 +61,7 @@ class OutputTest extends RepositoryTestCase
      * @dataProvider methodProvider
      *
      * @param string $method
-     * @param string|null $param
+     * @param string $param
      * @param mixed $expected
      */
     public function testMethodsReturnsNullWhenInvalidBodyIsReturned(string $method, string $param, $expected)
