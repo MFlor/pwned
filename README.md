@@ -74,12 +74,15 @@ $pwned->passwords()->occurences('password1');
 
 ### Exceptions
 This package will throw custom exceptions if a Client Error occures.
-`\Mflor\Pwned\Exceptions\BadRequestException` is thrown on status code 400
-`\Mflor\Pwned\Exceptions\ForbiddenException` is thrown on status code 403
-`\Mflor\Pwned\Exceptions\NotFoundException` is thrown on status code 404
-`\Mflor\Pwned\Exceptions\TooManyRequestsException` is thrown on status code 429
 
-**Note** 
+`\Mflor\Pwned\Exceptions\BadRequestException` is thrown on status code 400
+
+`\Mflor\Pwned\Exceptions\ForbiddenException` is thrown on status code 403
+
+`\Mflor\Pwned\Exceptions\NotFoundException` is thrown on status code 404
+
+`\Mflor\Pwned\Exceptions\TooManyRequestsException` is thrown on status code 429
+ 
 
 | Code |                   Description                                                                   |
 |------|-------------------------------------------------------------------------------------------------|
