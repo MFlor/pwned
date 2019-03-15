@@ -41,15 +41,12 @@ class PasteRepository
             switch ($exception->getResponse()->getStatusCode()) {
                 case 400:
                     throw new BadRequestException($reasonPhrase);
-                    break;
                 case 403:
                     throw new ForbiddenException($reasonPhrase);
-                    break;
                 case 404:
                     return null;
                 case 429:
                     throw new TooManyRequestsException($reasonPhrase);
-                    break;
                 default:
                     throw $exception;
             }
