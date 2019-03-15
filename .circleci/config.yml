@@ -46,4 +46,4 @@ jobs:
           path:  build/coverage.xml
       - run:
           name: "Push coverage report to Coveralls"
-          command: vendor/bin/php-coveralls --coverage_clover=build/coverage.xml
+          command: vendor/bin/php-coveralls --coverage_clover=build/coverage.xml --json_path=build/coveralls-upload.json
