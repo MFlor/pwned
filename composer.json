@@ -1,6 +1,6 @@
 {
     "name": "mflor/pwned",
-    "description": "PHP library for interacting with the HaveIBeenPwned API",
+    "description": "A clean and simple PHP library for interacting with all HaveIBeenPwned.com's API endpoints",
     "type": "library",
     "license": "MIT",
     "authors": [
