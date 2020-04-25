@@ -7,12 +7,12 @@ class Password
     /** @var string|null */
     private $hash;
     /** @var int */
-    private $occurences;
+    private $occurrences;
 
     public function __construct()
     {
         $this->hash = null;
-        $this->occurences = 0;
+        $this->occurrences = 0;
     }
 
     /**
@@ -36,18 +36,18 @@ class Password
     /**
      * @return int
      */
-    public function getOccurences(): int
+    public function getoccurrences(): int
     {
-        return $this->occurences;
+        return $this->occurrences;
     }
 
     /**
-     * @param int $occurences
+     * @param int $occurrences
      * @return Password
      */
-    public function setOccurences(int $occurences): Password
+    public function setoccurrences(int $occurrences): Password
     {
-        $this->occurences = $occurences;
+        $this->occurrences = $occurrences;
         return $this;
     }
 
@@ -65,7 +65,7 @@ class Password
         }
         if (($parts = explode(':', $string)) && !empty($parts) && count($parts) === 2) {
             $this->setHash($parts[0]);
-            $this->setOccurences(intval($parts[1]));
+            $this->setoccurrences(intval($parts[1]));
         }
 
         return $this;

@@ -85,8 +85,9 @@ class OutputTest extends RepositoryTestCase
     {
         $expectedBreaches = $this->breachFactory->getBreaches();
         $testData = json_encode($expectedBreaches);
+        $apiKey = bin2hex(random_bytes(16));
 
-        $repository = new BreachRepository($this->getClientWithResponse($testData));
+        $repository = new BreachRepository($this->getClientWithResponse($testData), $apiKey);
 
         try {
             $breaches = $repository->byAccount('test@example.com', ['truncateResponse' => false]);
@@ -94,7 +95,11 @@ class OutputTest extends RepositoryTestCase
             $this->fail(sprintf('Test threw unexpected exception (%s)', $exception->getMessage()));
             return;
         }
-        $this->assertRequest('breachedaccount/' . urlencode('test@example.com'), 'truncateResponse=0');
+        $this->assertRequest(
+            'breachedaccount/' . urlencode('test@example.com'),
+            'truncateResponse=0',
+            ['hibp-api-key' => $apiKey]
+        );
         $this->assertIsArray($breaches);
         $this->assertCount(count($expectedBreaches), $breaches);
         foreach ($expectedBreaches as $index => $expectedBreach) {
@@ -106,8 +111,9 @@ class OutputTest extends RepositoryTestCase
     {
         $expectedBreaches = $this->breachFactory->getNames();
         $testData = json_encode($expectedBreaches);
+        $apiKey = bin2hex(random_bytes(16));
 
-        $repository = new BreachRepository($this->getClientWithResponse($testData));
+        $repository = new BreachRepository($this->getClientWithResponse($testData), $apiKey);
 
         try {
             $breaches = $repository->byAccount('test@example.com');
@@ -115,7 +121,11 @@ class OutputTest extends RepositoryTestCase
             $this->fail(sprintf('Test threw unexpected exception (%s)', $exception->getMessage()));
             return;
         }
-        $this->assertRequest('breachedaccount/' . urlencode('test@example.com'));
+        $this->assertRequest(
+            'breachedaccount/' . urlencode('test@example.com'),
+            '',
+            ['hibp-api-key' => $apiKey]
+        );
         $this->assertIsArray($breaches);
         $this->assertCount(count($expectedBreaches), $breaches);
         $this->assertSame($expectedBreaches, $breaches);

@@ -12,7 +12,7 @@ class PasswordTest extends TestCase
         $password = new Password();
         $this->assertInstanceOf(Password::class, $password);
         $this->assertNull($password->getHash());
-        $this->assertSame(0, $password->getOccurences());
+        $this->assertSame(0, $password->getoccurrences());
     }
 
     public function testCanGetPasswordFromString()
@@ -22,7 +22,7 @@ class PasswordTest extends TestCase
         $password->fromString($string);
 
         $this->assertSame('abc', $password->getHash());
-        $this->assertSame(10, $password->getOccurences());
+        $this->assertSame(10, $password->getoccurrences());
     }
 
     public function testCanGetPasswordFromStringAndPrefix()
@@ -34,16 +34,16 @@ class PasswordTest extends TestCase
         $password->fromString($string, $prefix);
 
         $this->assertSame('abcdef', $password->getHash());
-        $this->assertSame(10, $password->getOccurences());
+        $this->assertSame(10, $password->getoccurrences());
     }
 
     public function testCanSetDataOnPassword()
     {
         $password = new Password();
         $password->setHash('AbCDEFG');
-        $password->setOccurences(100);
+        $password->setoccurrences(100);
 
         $this->assertSame('abcdefg', $password->getHash());
-        $this->assertSame(100, $password->getOccurences());
+        $this->assertSame(100, $password->getoccurrences());
     }
 }

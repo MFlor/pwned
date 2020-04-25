@@ -88,7 +88,7 @@ class ExceptionTest extends RepositoryTestCase
     }
 
     /**
-     * @dataProvider badResponseProvider
+     * @dataProvider authenticatedBadResponseProvider
      *
      * @param Response $response
      * @param string $expectedException

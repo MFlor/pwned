@@ -13,21 +13,21 @@ class Pwned
     private $passwords;
     private $pastes;
 
-    public function __construct()
+    public function __construct(string $apiKey = null)
     {
         $breachClient = new Client([
-            'base_uri' => 'https://haveibeenpwned.com/api/v2/',
+            'base_uri' => 'https://haveibeenpwned.com/api/v3/',
             'headers' => [
-                'User-Agent' => 'mflor-pwned-php-library/1.0',
-                'Accept' => 'application/json',
+                'User-Agent' => 'mflor-pwned-php-library/2.0',
+                'Accept' => 'application/json'
             ]
         ]);
-        $this->breaches = new BreachRepository($breachClient);
-        $this->pastes = new PasteRepository($breachClient);
+        $this->breaches = new BreachRepository($breachClient, $apiKey);
+        $this->pastes = new PasteRepository($breachClient, $apiKey);
         $passwordClient = new Client([
             'base_uri' => 'https://api.pwnedpasswords.com/',
             'headers' => [
-                'User-Agent' => 'mflor-pwned-php-library/1.0',
+                'User-Agent' => 'mflor-pwned-php-library/2.0',
                 'Accept' => 'text/plain',
             ]
         ]);

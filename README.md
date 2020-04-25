@@ -1,5 +1,5 @@
 # Pwned [![CircleCI](https://circleci.com/gh/MFlor/pwned.svg?style=svg)](https://circleci.com/gh/MFlor/pwned) [![Coverage Status](https://coveralls.io/repos/github/MFlor/pwned/badge.svg?branch=test%2Fcoveralls)](https://coveralls.io/github/MFlor/pwned?branch=test%2Fcoveralls)
-#### A clean and simple PHP library for interacting with all [HaveIBeenPwned.com's](https://haveibeenpwned.com/API/v2) API endpoints
+#### A clean and simple PHP library for interacting with all [HaveIBeenPwned.com's](https://haveibeenpwned.com/API/v3) API endpoints
 
 This package wraps the entire HaveIBeenPwned API in a simple, easy to use, PHP library, that can be used in any project.
 
@@ -11,6 +11,13 @@ Install the library with composer:
 composer require mflor/pwned
 ```
 
+### Authorisation
+
+Authorisation is required for all APIs that enable searching HIBP by email address,
+namely [retrieving all breaches for an account](https://haveibeenpwned.com/API/v3#BreachesForAccount) and
+[retrieving all pastes for an account](https://haveibeenpwned.com/API/v3#PastesForAccount).
+An HIBP subscription key is required to make an authorised call and can be obtained on [the API key page](https://haveibeenpwned.com/API/Key). 
+
 ### Setup
 ```php
 <?php
@@ -19,7 +26,10 @@ composer require mflor/pwned
 require_once './vendor/autoload.php';
 
 // Initiate a new instance of the Pwned class
-$pwned = new \MFlor\Pwned\Pwned();
+// It can be instantiated without an API key
+// but then account-specific braches and pastes
+// will result in unauthorized exceptions.
+$pwned = new \MFlor\Pwned\Pwned($apiKey = null);
 ```
 
 ## Usage
@@ -38,7 +48,7 @@ $pwned->breaches()->byDomain('adobe.com');
 $pwned->breaches()->byName('Adobe');
 // Returns a Breach Model (see MFlor/Pwned/Models/Breach.php)
 
-// Get breaches by account
+// Get breaches by account (Requires API key)
 $pwned->breaches()->byAccount('test@example.com');
 // Returns an array of Breach Models (see MFlor/Pwned/Models/Breach.php)
 
@@ -57,7 +67,7 @@ $pwned->breaches()->getDataClasses();
 
 ### Pastes
 ```php
-// Get all pastes by account
+// Get all pastes by account (Requires API key)
 $pwned->pastes()->byAccount('test@example.com')
 // Returns an array of Paste Models (see MFlor/Pwned/Models/Paste.php)
 ```
@@ -68,28 +78,38 @@ $pwned->pastes()->byAccount('test@example.com')
 $pwned->passwords()->search('e38ad');
 // Returns an array of Password Models (see MFlor/Pwned/Models/Password.php)
 
-$pwned->passwords()->occurences('password1');
-// Returns the number occurences of the given password has been found in leaks
+$pwned->passwords()->occurrences('password1');
+// Returns the number occurrences of the given password has been found in leaks
 ```
+
+Both search and occurrences takes a second boolean parameter, to disable padding for request.
+Be aware, that this is less secure, than having the padding enabled, which is default.
+Read more about the padding in [Troy Hunt's blog post](https://www.troyhunt.com/enhancing-pwned-passwords-privacy-with-padding/)
 
 ### Exceptions
 This package will throw custom exceptions if a Client Error occures.
 
 `\Mflor\Pwned\Exceptions\BadRequestException` is thrown on status code 400
 
+`\Mflor\Pwned\Exceptions\UnauthorizedException` is thrown on status code 401
+
 `\Mflor\Pwned\Exceptions\ForbiddenException` is thrown on status code 403
 
 `\Mflor\Pwned\Exceptions\NotFoundException` is thrown on status code 404
 
 `\Mflor\Pwned\Exceptions\TooManyRequestsException` is thrown on status code 429
+
+`\Mflor\Pwned\Exceptions\ServiceUnavailableException` is thrown on status code 503
  
 
 | Code |                   Description                                                                   |
 |------|-------------------------------------------------------------------------------------------------|
 | 400  | Bad request — the account does not comply with an acceptable format (i.e. it's an empty string) |
+| 401  | Unauthorised — either no API key was provided or it wasn't valid                                |
 | 403  | Forbidden — no user agent has been specified in the request                                     |
 | 404  | Not found — the account could not be found and has therefore not been pwned                     |
 | 429  | Too many requests — the rate limit has been exceeded                                            |
+| 503  | Service unavailable — usually returned by Cloudflare if the underlying service is not available |
 
 ## Testing
 You can run all tests by executing either of the following commands:
