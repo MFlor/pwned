@@ -23,7 +23,7 @@ class OutputTest extends RepositoryTestCase
             $this->fail(sprintf('Test threw unexpected exception (%s)', $exception->getMessage()));
             return;
         }
-        $this->assertRequest('range/e38ad');
+        $this->assertRequest('range/e38ad', '', ['Add-Padding' => 'true']);
         $this->assertIsArray($passwords);
         $this->assertCount(10, $passwords);
         $lines = explode("\n", $testData);
@@ -38,23 +38,57 @@ class OutputTest extends RepositoryTestCase
             $this->assertInstanceOf(Password::class, $password);
             $expectedParts = $expectedData[$index];
             $this->assertSame('e38ad' . strtolower($expectedParts[0]), $password->getHash());
-            $this->assertSame(intval($expectedParts[1]), $password->getOccurences());
+            $this->assertSame(intval($expectedParts[1]), $password->getoccurrences());
         }
     }
 
-    public function testCanGetOccurences()
+    public function testCanSearchWithoutPadding()
+    {
+        $repository = new PasswordRepository($this->getClientWithResponse());
+
+        try {
+            $repository->search('e38ad', false);
+        } catch (\Exception $exception) {
+            $this->fail(sprintf('Test threw unexpected exception (%s)', $exception->getMessage()));
+            return;
+        }
+        $this->assertRequest('range/e38ad', '', null);
+    }
+
+    public function testCanGetoccurrences()
     {
         $testData = $this->getTestData('passwordHashes.txt');
         $repository = new PasswordRepository($this->getClientWithResponse($testData));
 
         try {
-            $occurences = $repository->occurences('password1');
+            $occurrences = $repository->occurrences('password1');
         } catch (\Exception $exception) {
             $this->fail(sprintf('Test threw unexpected exception (%s)', $exception->getMessage()));
             return;
         }
-        $this->assertRequest('range/' . substr(hash('sha1', 'password1'), 0, 5));
-        $this->assertSame(2401761, $occurences);
+        $this->assertRequest(
+            'range/' . substr(hash('sha1', 'password1'), 0, 5),
+            '',
+            ['Add-Padding' => 'true']
+        );
+        $this->assertSame(2401761, $occurrences);
+    }
+
+    public function testCanGetoccurrencesWithoutPadding()
+    {
+        $repository = new PasswordRepository($this->getClientWithResponse());
+
+        try {
+            $repository->occurrences('password1', false);
+        } catch (\Exception $exception) {
+            $this->fail(sprintf('Test threw unexpected exception (%s)', $exception->getMessage()));
+            return;
+        }
+        $this->assertRequest(
+            'range/' . substr(hash('sha1', 'password1'), 0, 5),
+            '',
+            null
+        );
     }
 
     /**
@@ -80,7 +114,7 @@ class OutputTest extends RepositoryTestCase
     {
         return [
             'search' => ['search', 'abc12', null],
-            'occurences' => ['occurences', 'password1', 0],
+            'occurrences' => ['occurrences', 'password1', 0],
         ];
     }
 }

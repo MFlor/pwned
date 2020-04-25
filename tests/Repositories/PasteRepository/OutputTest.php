@@ -18,8 +18,9 @@ class OutputTest extends RepositoryTestCase
         $factory = new PastesFactory();
         $expectedData = $factory->getPastes();
         $testData = json_encode($expectedData);
+        $apiKey = bin2hex(random_bytes(16));
 
-        $repository = new PasteRepository($this->getClientWithResponse($testData));
+        $repository = new PasteRepository($this->getClientWithResponse($testData), $apiKey);
 
         try {
             $pastes = $repository->byAccount('test@example.com');
@@ -27,7 +28,11 @@ class OutputTest extends RepositoryTestCase
             $this->fail(sprintf('Test threw unexpected exception (%s)', $exception->getMessage()));
             return;
         }
-        $this->assertRequest('pasteaccount/' . urlencode('test@example.com'));
+        $this->assertRequest(
+            'pasteaccount/' . urlencode('test@example.com'),
+            '',
+            ['hibp-api-key' => $apiKey]
+        );
         $this->assertIsArray($pastes);
         $this->assertCount(count($expectedData), $pastes);
         /**

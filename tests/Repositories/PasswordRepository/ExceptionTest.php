@@ -45,7 +45,7 @@ class ExceptionTest extends RepositoryTestCase
      * @param int $statusCode
      * @param string $reasonPhrase
      */
-    public function testOccurencesCanHandleBadResponse(
+    public function testoccurrencesCanHandleBadResponse(
         Response $response,
         string $expectedException,
         int $statusCode,
@@ -54,7 +54,7 @@ class ExceptionTest extends RepositoryTestCase
         $repository = $this->getRepository($response);
 
         try {
-            $repository->occurences('password1');
+            $repository->occurrences('password1');
         } catch (AbstractException $exception) {
             $this->assertException($expectedException, $exception, $statusCode, $reasonPhrase);
             return;

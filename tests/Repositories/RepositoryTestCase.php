@@ -12,7 +12,9 @@ use MFlor\Pwned\Exceptions\AbstractException;
 use MFlor\Pwned\Exceptions\BadRequestException;
 use MFlor\Pwned\Exceptions\ForbiddenException;
 use MFlor\Pwned\Exceptions\NotFoundException;
+use MFlor\Pwned\Exceptions\ServiceUnavailableException;
 use MFlor\Pwned\Exceptions\TooManyRequestsException;
+use MFlor\Pwned\Exceptions\UnauthorizedException;
 use PHPUnit\Framework\TestCase;
 
 class RepositoryTestCase extends TestCase
@@ -47,7 +49,25 @@ class RepositoryTestCase extends TestCase
                 429,
                 'Too Many Requests'
             ],
+            'Service Unavailable' => [
+                new Response(503, [], 'Service is unavailable'),
+                ServiceUnavailableException::class,
+                503,
+                'Service Unavailable'
+            ],
         ];
+    }
+
+    public function authenticatedBadResponseProvider()
+    {
+        $responses = $this->badResponseProvider();
+        $responses['Unauthorized'] = [
+            new Response(401, [], 'Unauthorized'),
+            UnauthorizedException::class,
+            401,
+            'Unauthorized'
+        ];
+        return $responses;
     }
 
     protected function assertException(
@@ -61,7 +81,7 @@ class RepositoryTestCase extends TestCase
         $this->assertSame($reasonPhrase, $actual->getReasonPhrase());
     }
 
-    protected function getClientWithResponse(string $data): Client
+    protected function getClientWithResponse(string $data = ''): Client
     {
         $mock = new MockHandler([
             new Response(200, ['Content-Type' => 'application/json'], $data),
@@ -70,7 +90,12 @@ class RepositoryTestCase extends TestCase
         $history = Middleware::history($this->requestContainer);
         $handler = HandlerStack::create($mock);
         $handler->push($history);
-        return new Client(['handler' => $handler]);
+        return new Client([
+            'handler' => $handler,
+            'headers' => [
+                'User-Agent' => 'mflor-pwned-php-library/2.0'
+            ]
+        ]);
     }
 
     protected function getTestData(string $file)
@@ -78,7 +103,7 @@ class RepositoryTestCase extends TestCase
         return file_get_contents(sprintf('%s/data/%s', dirname(__DIR__), $file));
     }
 
-    protected function assertRequest(string $requestTarget, string $query = '')
+    protected function assertRequest(string $requestTarget, string $query = '', array $headers = null)
     {
         $this->assertCount(1, $this->requestContainer);
         /** @var Request $request */
@@ -87,5 +112,17 @@ class RepositoryTestCase extends TestCase
         $this->assertSame('GET', $request->getMethod());
         $this->assertSame($requestTarget, $uri->getPath());
         $this->assertSame($query, $uri->getQuery());
+        if ($headers) {
+            foreach ($headers as $key => $value) {
+                $this->assertTrue(array_key_exists($key, $request->getHeaders()));
+                $this->assertSame($value, $request->getHeaderLine($key));
+            }
+        } else {
+            $this->assertEquals([
+                'User-Agent' => [
+                    'mflor-pwned-php-library/2.0'
+                ]
+            ], $request->getHeaders());
+        }
     }
 }

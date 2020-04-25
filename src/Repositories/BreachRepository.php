@@ -2,36 +2,27 @@
 
 namespace MFlor\Pwned\Repositories;
 
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\ClientException;
-use GuzzleHttp\RequestOptions;
 use MFlor\Pwned\Exceptions\BadRequestException;
 use MFlor\Pwned\Exceptions\ForbiddenException;
 use MFlor\Pwned\Exceptions\NotFoundException;
+use MFlor\Pwned\Exceptions\ServiceUnavailableException;
 use MFlor\Pwned\Exceptions\TooManyRequestsException;
+use MFlor\Pwned\Exceptions\UnauthorizedException;
 use MFlor\Pwned\Models\Breach;
-use Psr\Http\Message\ResponseInterface;
 
-class BreachRepository
+class BreachRepository extends AbstractServiceRepository
 {
-    /** @var Client */
-    private $client;
-
-    public function __construct(Client $client)
-    {
-        $this->client = $client;
-    }
-
     /**
      * Fetch all breaches in HaveIBeenPwned's database
      * @return array|null
      *
-     * @see https://haveibeenpwned.com/API/v2#AllBreaches
+     * @see https://haveibeenpwned.com/API/v3#AllBreaches
      *
      * @throws BadRequestException
      * @throws ForbiddenException
      * @throws NotFoundException
      * @throws TooManyRequestsException
+     * @throws ServiceUnavailableException
      */
     public function getAll(): ?array
     {
@@ -41,7 +32,7 @@ class BreachRepository
     /**
      * Fetch all breaches in HaveIBeenPwned's database by a domain
      *
-     * @see https://haveibeenpwned.com/API/v2#AllBreaches
+     * @see https://haveibeenpwned.com/API/v3#AllBreaches
      *
      * @param string $domain
      *
@@ -51,6 +42,7 @@ class BreachRepository
      * @throws ForbiddenException
      * @throws NotFoundException
      * @throws TooManyRequestsException
+     * @throws ServiceUnavailableException
      */
     public function byDomain(string $domain): ?array
     {
@@ -60,7 +52,7 @@ class BreachRepository
     /**
      * Get a breach by its name
      *
-     * @see https://haveibeenpwned.com/API/v2#SingleBreach
+     * @see https://haveibeenpwned.com/API/v3#SingleBreach
      *
      * @param string $name
      *
@@ -70,6 +62,7 @@ class BreachRepository
      * @throws ForbiddenException
      * @throws NotFoundException
      * @throws TooManyRequestsException
+     * @throws ServiceUnavailableException
      */
     public function byName(string $name): ?Breach
     {
@@ -88,13 +81,14 @@ class BreachRepository
      * Get all breaches for an account
      *
      * Options:
-     * - truncateResponse (bool):true - Returns only the name of the breach.
+     * - truncateResponse (bool):false - Returns only the name of the breach.
+     *      By default, the response is truncated
      * - domain (string):null - Filters the result set to only breaches against the domain specified.
      *      It is possible that one site (and consequently domain), is compromised on multiple occasions.
      * - includeUnverified (bool):false - Returns breaches that have been flagged as "unverified".
-     *      By default, only verified breaches are returned when performing a search.
+     *      By default, unverified breaches are included when performing a search.
      *
-     * @see https://haveibeenpwned.com/API/v2#BreachesForAccount
+     * @see https://haveibeenpwned.com/API/v3#BreachesForAccount
      *
      * @param string $account
      * @param array $options
@@ -105,10 +99,12 @@ class BreachRepository
      * @throws ForbiddenException
      * @throws NotFoundException
      * @throws TooManyRequestsException
+     * @throws UnauthorizedException
+     * @throws ServiceUnavailableException
      */
     public function byAccount(string $account, array $options = []): ?array
     {
-        $response = $this->getResponse(sprintf('breachedaccount/%s', urlencode($account)), $options);
+        $response = $this->getAuthenticatedResponse(sprintf('breachedaccount/%s', urlencode($account)), $options);
         $data = json_decode($response->getBody()->getContents());
         if (json_last_error() === JSON_ERROR_NONE) {
             if (isset($options['truncateResponse']) && $options['truncateResponse'] === false) {
@@ -135,6 +131,7 @@ class BreachRepository
      * @throws ForbiddenException
      * @throws NotFoundException
      * @throws TooManyRequestsException
+     * @throws ServiceUnavailableException
      */
     public function getDataClasses()
     {
@@ -158,6 +155,7 @@ class BreachRepository
      * @throws ForbiddenException
      * @throws NotFoundException
      * @throws TooManyRequestsException
+     * @throws ServiceUnavailableException
      */
     private function getAllBreaches(string $domain = null): ?array
     {
@@ -173,40 +171,6 @@ class BreachRepository
             return $this->mapBreaches($data);
         }
         return null;
-    }
-
-    /**
-     * @param string $uri
-     * @param array $query
-     *
-     * @return ResponseInterface|null
-     *
-     * @throws BadRequestException
-     * @throws ForbiddenException
-     * @throws NotFoundException
-     * @throws TooManyRequestsException
-     */
-    private function getResponse(string $uri, array $query = []): ?ResponseInterface
-    {
-        try {
-            return $this->client->get($uri, [
-                RequestOptions::QUERY => $query
-            ]);
-        } catch (ClientException $exception) {
-            $reasonPhrase = $exception->getResponse()->getReasonPhrase();
-            switch ($exception->getResponse()->getStatusCode()) {
-                case 400:
-                    throw new BadRequestException($reasonPhrase);
-                case 403:
-                    throw new ForbiddenException($reasonPhrase);
-                case 404:
-                    throw new NotFoundException($reasonPhrase);
-                case 429:
-                    throw new TooManyRequestsException($reasonPhrase);
-                default:
-                    throw $exception;
-            }
-        }
     }
 
     /**
