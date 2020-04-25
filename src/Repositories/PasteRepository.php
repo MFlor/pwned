@@ -15,7 +15,7 @@ class PasteRepository extends AbstractServiceRepository
     /**
      * Get all pastes where an account has occured.
      *
-     * @see https://haveibeenpwned.com/API/v2#PastesForAccount
+     * @see https://haveibeenpwned.com/API/v3#PastesForAccount
      *
      * @param string $account
      *
