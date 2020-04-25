@@ -1,4 +1,4 @@
-# Pwned [![CircleCI](https://circleci.com/gh/MFlor/pwned.svg?style=svg)](https://circleci.com/gh/MFlor/pwned) [![Coverage Status](https://coveralls.io/repos/github/MFlor/pwned/badge.svg?branch=test%2Fcoveralls)](https://coveralls.io/github/MFlor/pwned?branch=test%2Fcoveralls)
+# Pwned [![CircleCI](https://circleci.com/gh/MFlor/pwned.svg?style=svg)](https://circleci.com/gh/MFlor/pwned) [![Coverage Status](https://coveralls.io/repos/github/MFlor/pwned/badge.svg?branch=master)](https://coveralls.io/github/MFlor/pwned?branch=master)
 #### A clean and simple PHP library for interacting with all [HaveIBeenPwned.com's](https://haveibeenpwned.com/API/v3) API endpoints
 
 This package wraps the entire HaveIBeenPwned API in a simple, easy to use, PHP library, that can be used in any project.
