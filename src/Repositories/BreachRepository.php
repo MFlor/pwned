@@ -123,7 +123,7 @@ class BreachRepository extends AbstractServiceRepository
      * The values returned by this service are ordered alphabetically in a string array and will expand over time
      * as new breaches expose previously unseen classes of data.
      *
-     * @see https://haveibeenpwned.com/API/v2#AllDataClasses
+     * @see https://haveibeenpwned.com/API/v3#AllDataClasses
      *
      * @return array|null
      *
