@@ -12,7 +12,7 @@ jobs:
 
     strategy:
       matrix:
-        php: [7.1, 7.2, 7.3, 7.4, 8.0]
+        php: [7.2, 7.3, 7.4, 8.0]
 
     name: PHP ${{ matrix.php }}
 
@@ -34,10 +34,4 @@ jobs:
       - name: Execute tests (Unit and Feature tests) via PHPUnit
         env:
           XDEBUG_MODE: coverage
-        run: php -dpcov.enabled=1 vendor/bin/phpunit --testdox --coverage-clover clover.xml
-
-      - name: Upload coverage to Codecov.io
-        shell: bash
-        run: bash <(curl -s https://codecov.io/bash) -t ${CODECOV_TOKEN} -f ${GITHUB_WORKSPACE}/clover.xml -C ${GITHUB_SHA}
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        run: php -dpcov.enabled=1 vendor/bin/phpunit --testdox
