@@ -1,4 +1,9 @@
-# Pwned [![Tests](https://github.com/MFlor/pwned/actions/workflows/tests.yml/badge.svg)](https://codecov.io/gh/MFlor/pwned) [![codecov](https://codecov.io/gh/MFlor/pwned/branch/main/graph/badge.svg?token=L0Y15FOKTP)](https://codecov.io/gh/MFlor/pwned)
+# Pwned
+[![Build Status](https://github.com/MFlor/pwned/actions/workflows/tests.yml/badge.svg)](https://codecov.io/gh/MFlor/pwned)
+[![Coverage Status](https://codecov.io/gh/MFlor/pwned/branch/main/graph/badge.svg?token=L0Y15FOKTP)](https://codecov.io/gh/MFlor/pwned)
+[![Total Downloads](https://img.shields.io/packagist/dt/mflor/pwned)](https://packagist.org/packages/mflor/pwned)
+[![Latest Version](https://img.shields.io/packagist/v/mflor/pwned)](https://packagist.org/packages/mflor/pwned)
+[![License](https://img.shields.io/packagist/l/mflor/pwned)](https://packagist.org/packages/mflor/pwned)
 #### A clean and simple PHP library for interacting with all [HaveIBeenPwned.com's](https://haveibeenpwned.com/API/v3) API endpoints
 
 This package wraps the entire HaveIBeenPwned API in a simple, easy to use, PHP library, that can be used in any project.
