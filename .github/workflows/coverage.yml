@@ -1,0 +1,29 @@
+name: coverage
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install Dependencies
+        run: composer install --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+
+      - name: Execute tests (Unit and Feature tests) via PHPUnit
+        env:
+          XDEBUG_MODE: coverage
+        run: php -dpcov.enabled=1 vendor/bin/phpunit --testdox --coverage-clover clover.xml
+
+      - name: Upload coverage to Codecov.io
+        shell: bash
+        run: bash <(curl -s https://codecov.io/bash) -t ${CODECOV_TOKEN} -f ${GITHUB_WORKSPACE}/clover.xml -C ${GITHUB_SHA}
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
