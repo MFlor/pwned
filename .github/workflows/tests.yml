@@ -1,0 +1,43 @@
+name: tests
+
+on:
+  push:
+    branches:
+      - main
+      - update/github-workflows-php-8
+
+jobs:
+  tests:
+    runs-on: ubuntu-20.04
+
+    strategy:
+      matrix:
+        php: [7.1, 7.2, 7.3, 7.4, 8.0]
+
+    name: PHP ${{ matrix.php }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick
+          tools: composer:v2
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Execute tests (Unit and Feature tests) via PHPUnit
+        env:
+          XDEBUG_MODE: coverage
+        run: php -dpcov.enabled=1 vendor/bin/phpunit --testdox --coverage-clover clover.xml
+
+      - name: Upload coverage to Codecov.io
+        shell: bash
+        run: bash <(curl -s https://codecov.io/bash) -t ${CODECOV_TOKEN} -f ${GITHUB_WORKSPACE}/clover.xml -C ${GITHUB_SHA}
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
