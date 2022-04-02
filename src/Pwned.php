@@ -9,9 +9,9 @@ use MFlor\Pwned\Repositories\PasteRepository;
 
 class Pwned
 {
-    private $breaches;
-    private $passwords;
-    private $pastes;
+    private BreachRepository $breaches;
+    private PasswordRepository $passwords;
+    private PasteRepository $pastes;
 
     public function __construct(string $apiKey = null)
     {
@@ -34,17 +34,17 @@ class Pwned
         $this->passwords = new PasswordRepository($passwordClient);
     }
 
-    public function breaches()
+    public function breaches(): BreachRepository
     {
         return $this->breaches;
     }
 
-    public function pastes()
+    public function pastes(): PasteRepository
     {
         return $this->pastes;
     }
 
-    public function passwords()
+    public function passwords(): PasswordRepository
     {
         return $this->passwords;
     }

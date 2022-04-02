@@ -3,6 +3,7 @@
 namespace MFlor\Pwned\Tests\Repositories\PasteRepository;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
@@ -13,7 +14,11 @@ use MFlor\Pwned\Tests\Repositories\RepositoryTestCase;
 
 class OutputTest extends RepositoryTestCase
 {
-    public function testCanGetPastesByAccount()
+    /**
+     * @throws \Exception
+     * @throws GuzzleException
+     */
+    public function testCanGetPastesByAccount(): void
     {
         $factory = new PastesFactory();
         $expectedData = $factory->getPastes();
@@ -26,7 +31,6 @@ class OutputTest extends RepositoryTestCase
             $pastes = $repository->byAccount('test@example.com');
         } catch (\Exception $exception) {
             $this->fail(sprintf('Test threw unexpected exception (%s)', $exception->getMessage()));
-            return;
         }
         $this->assertRequest(
             'pasteaccount/' . urlencode('test@example.com'),
@@ -50,7 +54,10 @@ class OutputTest extends RepositoryTestCase
         }
     }
 
-    public function testMethodsReturnsNullWhenInvalidJsonIsReturned()
+    /**
+     * @throws GuzzleException
+     */
+    public function testMethodsReturnsNullWhenInvalidJsonIsReturned(): void
     {
         $mock = new MockHandler([
             new Response(200, [], 'invalid json'),
@@ -63,7 +70,6 @@ class OutputTest extends RepositoryTestCase
             $result = $repository->byAccount('test@example.com');
         } catch (\Exception $exception) {
             $this->fail(sprintf('Test threw unexpected exception (%s)', $exception->getMessage()));
-            return;
         }
         $this->assertNull($result);
     }

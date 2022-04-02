@@ -10,7 +10,7 @@ use PHPUnit\Framework\TestCase;
 
 class PwnedTest extends TestCase
 {
-    public function testCanInstantiateClass()
+    public function testCanInstantiateClass(): void
     {
         $pwned = new Pwned();
         $this->assertInstanceOf(Pwned::class, $pwned);

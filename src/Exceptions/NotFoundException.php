@@ -4,7 +4,7 @@ namespace MFlor\Pwned\Exceptions;
 
 class NotFoundException extends AbstractException
 {
-    const STATUS_CODE = 404;
+    public const STATUS_CODE = 404;
 
     public function __construct(string $reasonPhrase)
     {

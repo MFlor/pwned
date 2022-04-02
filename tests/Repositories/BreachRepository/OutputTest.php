@@ -3,9 +3,11 @@
 namespace MFlor\Pwned\Tests\Repositories\BreachRepository;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
+use MFlor\Pwned\Exceptions\AbstractException;
 use MFlor\Pwned\Models\Breach;
 use MFlor\Pwned\Repositories\BreachRepository;
 use MFlor\Pwned\Tests\Factories\BreachFactory;
@@ -13,17 +15,19 @@ use MFlor\Pwned\Tests\Repositories\RepositoryTestCase;
 
 class OutputTest extends RepositoryTestCase
 {
-    /** @var BreachFactory */
-    private $breachFactory;
+    private BreachFactory $factory;
 
     public function setUp(): void
     {
-        $this->breachFactory = new BreachFactory();
+        $this->factory = new BreachFactory();
     }
 
-    public function testCanGetAllBreaches()
+    /**
+     * @throws GuzzleException
+     */
+    public function testCanGetAllBreaches(): void
     {
-        $expectedBreaches = $this->breachFactory->getBreaches();
+        $expectedBreaches = $this->factory->getBreaches();
         $testData = json_encode($expectedBreaches);
 
         $repository = new BreachRepository($this->getClientWithResponse($testData));
@@ -32,7 +36,6 @@ class OutputTest extends RepositoryTestCase
             $breaches = $repository->getAll();
         } catch (\Exception $exception) {
             $this->fail(sprintf('Test threw unexpected exception (%s)', $exception->getMessage()));
-            return;
         }
         $this->assertRequest('breaches');
         $this->assertIsArray($breaches);
@@ -42,9 +45,12 @@ class OutputTest extends RepositoryTestCase
         }
     }
 
-    public function testCanGetBreachesByDomain()
+    /**
+     * @throws GuzzleException
+     */
+    public function testCanGetBreachesByDomain(): void
     {
-        $expectedBreaches = $this->breachFactory->getBreaches();
+        $expectedBreaches = $this->factory->getBreaches();
         $testData = json_encode($expectedBreaches);
 
         $repository = new BreachRepository($this->getClientWithResponse($testData));
@@ -53,7 +59,6 @@ class OutputTest extends RepositoryTestCase
             $breaches = $repository->byDomain('example.com');
         } catch (\Exception $exception) {
             $this->fail(sprintf('Test threw unexpected exception (%s)', $exception->getMessage()));
-            return;
         }
         $this->assertRequest('breaches', 'domain=example.com');
         $this->assertIsArray($breaches);
@@ -63,9 +68,12 @@ class OutputTest extends RepositoryTestCase
         }
     }
 
-    public function testCanGetBreachByName()
+    /**
+     * @throws GuzzleException
+     */
+    public function testCanGetBreachByName(): void
     {
-        $expectedBreach = $this->breachFactory->getBreach();
+        $expectedBreach = $this->factory->getBreach();
         $testData = json_encode($expectedBreach);
 
         $repository = new BreachRepository($this->getClientWithResponse($testData));
@@ -74,16 +82,19 @@ class OutputTest extends RepositoryTestCase
             $breach = $repository->byName('Adobe');
         } catch (\Exception $exception) {
             $this->fail(sprintf('Test threw unexpected exception (%s)', $exception->getMessage()));
-            return;
         }
         $this->assertRequest('breach/Adobe');
         $expectedBreach = json_decode($testData);
         $this->assertBreachMatchesData($expectedBreach, $breach);
     }
 
-    public function testCanGetFullBreachesByAccount()
+    /**
+     * @throws \Exception
+     * @throws GuzzleException
+     */
+    public function testCanGetFullBreachesByAccount(): void
     {
-        $expectedBreaches = $this->breachFactory->getBreaches();
+        $expectedBreaches = $this->factory->getBreaches();
         $testData = json_encode($expectedBreaches);
         $apiKey = bin2hex(random_bytes(16));
 
@@ -93,7 +104,6 @@ class OutputTest extends RepositoryTestCase
             $breaches = $repository->byAccount('test@example.com', ['truncateResponse' => false]);
         } catch (\Exception $exception) {
             $this->fail(sprintf('Test threw unexpected exception (%s)', $exception->getMessage()));
-            return;
         }
         $this->assertRequest(
             'breachedaccount/' . urlencode('test@example.com'),
@@ -107,9 +117,12 @@ class OutputTest extends RepositoryTestCase
         }
     }
 
-    public function testCanGetBreachNamesByAccount()
+    /**
+     * @throws \Exception
+     */
+    public function testCanGetBreachNamesByAccount(): void
     {
-        $expectedBreaches = $this->breachFactory->getNames();
+        $expectedBreaches = $this->factory->getNames();
         $testData = json_encode($expectedBreaches);
         $apiKey = bin2hex(random_bytes(16));
 
@@ -117,9 +130,8 @@ class OutputTest extends RepositoryTestCase
 
         try {
             $breaches = $repository->byAccount('test@example.com');
-        } catch (\Exception $exception) {
+        } catch (AbstractException|GuzzleException $exception) {
             $this->fail(sprintf('Test threw unexpected exception (%s)', $exception->getMessage()));
-            return;
         }
         $this->assertRequest(
             'breachedaccount/' . urlencode('test@example.com'),
@@ -131,9 +143,12 @@ class OutputTest extends RepositoryTestCase
         $this->assertSame($expectedBreaches, $breaches);
     }
 
-    public function testCanGetDataClasses()
+    /**
+     * @throws GuzzleException
+     */
+    public function testCanGetDataClasses(): void
     {
-        $expectedClasses = $this->breachFactory->getDataClasses();
+        $expectedClasses = $this->factory->getDataClasses();
         $testData = json_encode($expectedClasses);
 
         $repository = new BreachRepository($this->getClientWithResponse($testData));
@@ -142,7 +157,6 @@ class OutputTest extends RepositoryTestCase
             $dataClasses = $repository->getDataClasses();
         } catch (\Exception $exception) {
             $this->fail(sprintf('Test threw unexpected exception (%s)', $exception->getMessage()));
-            return;
         }
         $this->assertRequest('dataclasses');
         $this->assertIsArray($dataClasses);
@@ -156,7 +170,7 @@ class OutputTest extends RepositoryTestCase
      * @param string $method
      * @param string|null $param
      */
-    public function testMethodsReturnsNullWhenInvalidJsonIsReturned(string $method, ?string $param = null)
+    public function testMethodsReturnsNullWhenInvalidJsonIsReturned(string $method, ?string $param = null): void
     {
         $mock = new MockHandler([
            new Response(200, [], 'invalid json'),
@@ -172,7 +186,10 @@ class OutputTest extends RepositoryTestCase
         }
     }
 
-    public function methodProvider()
+    /**
+     * @return string[][]
+     */
+    public function methodProvider(): array
     {
         return [
             'getAll' => ['getAll'],
@@ -183,7 +200,7 @@ class OutputTest extends RepositoryTestCase
         ];
     }
 
-    private function assertBreachMatchesData(\stdClass $expectedData, Breach $breach)
+    private function assertBreachMatchesData(\stdClass $expectedData, Breach $breach): void
     {
         $this->assertInstanceOf(Breach::class, $breach);
         $this->assertSame($expectedData->Name, $breach->getName());

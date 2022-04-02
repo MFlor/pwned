@@ -3,6 +3,7 @@
 namespace MFlor\Pwned\Repositories;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\RequestOptions;
 use MFlor\Pwned\Exceptions\BadRequestException;
@@ -15,8 +16,7 @@ use Psr\Http\Message\ResponseInterface;
 
 class PasswordRepository
 {
-    /** @var Client */
-    private $client;
+    private Client $client;
 
     public function __construct(Client $client)
     {
@@ -32,13 +32,14 @@ class PasswordRepository
      *
      * @param string $prefix
      * @param bool $pad
-     * @return array|null
+     * @return Password[]|null
      *
      * @throws BadRequestException
      * @throws ForbiddenException
      * @throws NotFoundException
      * @throws TooManyRequestsException
      * @throws ServiceUnavailableException
+     * @throws GuzzleException
      */
     public function search(string $prefix, bool $pad = true): ?array
     {
@@ -48,8 +49,7 @@ class PasswordRepository
 
         if ($data) {
             return array_map(function (string $string) use ($prefix) {
-                $password = new Password();
-                return $password->fromString($string, $prefix);
+                return (new Password())->fromString($string, $prefix);
             }, $data);
         }
         return null;
@@ -73,10 +73,9 @@ class PasswordRepository
     {
         $hash = hash('sha1', $password);
         if ($passwords = $this->search(substr($hash, 0, 5), $pad)) {
-            /** @var Password $pswd */
-            foreach ($passwords as $pswd) {
-                if ($pswd->getHash() === $hash) {
-                    return $pswd->getoccurrences();
+            foreach ($passwords as $pswrd) {
+                if ($pswrd->getHash() === $hash) {
+                    return $pswrd->getoccurrences();
                 }
             }
         }
@@ -88,15 +87,16 @@ class PasswordRepository
      * @param string $uri
      * @param bool $pad
      *
-     * @return ResponseInterface|null
+     * @return ResponseInterface
      *
      * @throws BadRequestException
      * @throws ForbiddenException
      * @throws NotFoundException
      * @throws TooManyRequestsException
      * @throws ServiceUnavailableException
+     * @throws GuzzleException
      */
-    private function getResponse(string $uri, bool $pad = true): ?ResponseInterface
+    private function getResponse(string $uri, bool $pad = true): ResponseInterface
     {
         try {
             $headers = [];
@@ -109,8 +109,11 @@ class PasswordRepository
                 RequestOptions::HEADERS => $headers
             ]);
         } catch (RequestException $exception) {
-            $reasonPhrase = $exception->getResponse()->getReasonPhrase();
-            switch ($exception->getResponse()->getStatusCode()) {
+            if (!$response = $exception->getResponse()) {
+                throw $exception;
+            }
+            $reasonPhrase = $response->getReasonPhrase();
+            switch ($response->getStatusCode()) {
                 case 400:
                     throw new BadRequestException($reasonPhrase);
                 case 403:

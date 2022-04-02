@@ -3,6 +3,7 @@
 namespace MFlor\Pwned\Tests\Repositories\BreachRepository;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
@@ -19,13 +20,14 @@ class ExceptionTest extends RepositoryTestCase
      * @param string $expectedException
      * @param int $statusCode
      * @param string $reasonPhrase
+     * @throws GuzzleException
      */
     public function testAllBreachesCanHandleBadResponses(
         Response $response,
         string $expectedException,
         int $statusCode,
         string $reasonPhrase
-    ) {
+    ): void {
         $repository = $this->getRepository($response);
         try {
             $repository->getAll();
@@ -43,13 +45,14 @@ class ExceptionTest extends RepositoryTestCase
      * @param string $expectedException
      * @param int $statusCode
      * @param string $reasonPhrase
+     * @throws GuzzleException
      */
     public function testGetByDomainBreachesCanHandleBadResponses(
         Response $response,
         string $expectedException,
         int $statusCode,
         string $reasonPhrase
-    ) {
+    ): void {
         $repository = $this->getRepository($response);
 
         try {
@@ -69,13 +72,14 @@ class ExceptionTest extends RepositoryTestCase
      * @param string $expectedException
      * @param int $statusCode
      * @param string $reasonPhrase
+     * @throws GuzzleException
      */
     public function testGetByNameBreachesCanHandleBadResponses(
         Response $response,
         string $expectedException,
         int $statusCode,
         string $reasonPhrase
-    ) {
+    ): void {
         $repository = $this->getRepository($response);
 
         try {
@@ -94,13 +98,14 @@ class ExceptionTest extends RepositoryTestCase
      * @param string $expectedException
      * @param int $statusCode
      * @param string $reasonPhrase
+     * @throws GuzzleException
      */
     public function testGetByAccountBreachesCanHandleBadResponses(
         Response $response,
         string $expectedException,
         int $statusCode,
         string $reasonPhrase
-    ) {
+    ): void {
         $repository = $this->getRepository($response);
 
         try {
@@ -119,13 +124,14 @@ class ExceptionTest extends RepositoryTestCase
      * @param string $expectedException
      * @param int $statusCode
      * @param string $reasonPhrase
+     * @throws GuzzleException
      */
     public function testGetDataClassesCanHandleBadResponses(
         Response $response,
         string $expectedException,
         int $statusCode,
         string $reasonPhrase
-    ) {
+    ): void {
         $repository = $this->getRepository($response);
 
         try {
@@ -137,7 +143,10 @@ class ExceptionTest extends RepositoryTestCase
         $this->fail('Failed throwing an exception!');
     }
 
-    public function testUnexpectedExceptionThrowsTheException()
+    /**
+     * @throws GuzzleException
+     */
+    public function testUnexpectedExceptionThrowsTheException(): void
     {
         $response = new Response(402, [], 'Payment required');
 

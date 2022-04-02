@@ -3,6 +3,7 @@
 namespace MFlor\Pwned\Repositories;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\RequestOptions;
 use MFlor\Pwned\Exceptions\BadRequestException;
@@ -15,10 +16,8 @@ use Psr\Http\Message\ResponseInterface;
 
 abstract class AbstractServiceRepository
 {
-    /** @var Client */
-    private $client;
-    /** @var string|null */
-    private $apiKey;
+    private Client $client;
+    private ?string $apiKey;
 
     public function __construct(Client $client, string $apiKey = null)
     {
@@ -28,46 +27,34 @@ abstract class AbstractServiceRepository
 
     /**
      * @param string $uri
-     * @param array $query
+     * @param array<string, string> $query
      *
-     * @return ResponseInterface|null
+     * @return ResponseInterface
      *
      * @throws BadRequestException
      * @throws ForbiddenException
+     * @throws GuzzleException
      * @throws NotFoundException
      * @throws ServiceUnavailableException
      * @throws TooManyRequestsException
+     * @throws UnauthorizedException
      */
-    protected function getResponse(string $uri, array $query = []): ?ResponseInterface
+    protected function getResponse(string $uri, array $query = []): ResponseInterface
     {
         try {
             return $this->client->get($uri, [
                 RequestOptions::QUERY => $query
             ]);
         } catch (RequestException $exception) {
-            $reasonPhrase = $exception->getResponse()->getReasonPhrase();
-            switch ($exception->getResponse()->getStatusCode()) {
-                case 400:
-                    throw new BadRequestException($reasonPhrase);
-                case 403:
-                    throw new ForbiddenException($reasonPhrase);
-                case 404:
-                    throw new NotFoundException($reasonPhrase);
-                case 429:
-                    throw new TooManyRequestsException($reasonPhrase);
-                case 503:
-                    throw new ServiceUnavailableException($reasonPhrase);
-                default:
-                    throw $exception;
-            }
+            throw $this->handleRequestException($exception);
         }
     }
 
     /**
      * @param string $uri
-     * @param array $query
+     * @param array<string, string|bool> $query
      *
-     * @return ResponseInterface|null
+     * @return ResponseInterface
      *
      * @throws BadRequestException
      * @throws ForbiddenException
@@ -75,8 +62,9 @@ abstract class AbstractServiceRepository
      * @throws ServiceUnavailableException
      * @throws TooManyRequestsException
      * @throws UnauthorizedException
+     * @throws GuzzleException
      */
-    protected function getAuthenticatedResponse(string $uri, array $query = []): ?ResponseInterface
+    protected function getAuthenticatedResponse(string $uri, array $query = []): ResponseInterface
     {
         try {
             return $this->client->get($uri, [
@@ -86,23 +74,43 @@ abstract class AbstractServiceRepository
                 ]
             ]);
         } catch (RequestException $exception) {
-            $reasonPhrase = $exception->getResponse()->getReasonPhrase();
-            switch ($exception->getResponse()->getStatusCode()) {
-                case 400:
-                    throw new BadRequestException($reasonPhrase);
-                case 401:
-                    throw new UnauthorizedException($reasonPhrase);
-                case 403:
-                    throw new ForbiddenException($reasonPhrase);
-                case 404:
-                    throw new NotFoundException($reasonPhrase);
-                case 429:
-                    throw new TooManyRequestsException($reasonPhrase);
-                case 503:
-                    throw new ServiceUnavailableException($reasonPhrase);
-                default:
-                    throw $exception;
-            }
+            throw $this->handleRequestException($exception);
+        }
+    }
+
+    /**
+     * @param RequestException $exception
+     *
+     * @return \RuntimeException
+     *
+     * @throws BadRequestException
+     * @throws ForbiddenException
+     * @throws NotFoundException
+     * @throws ServiceUnavailableException
+     * @throws TooManyRequestsException
+     * @throws UnauthorizedException
+     */
+    protected function handleRequestException(RequestException $exception): \RuntimeException
+    {
+        if (!$response = $exception->getResponse()) {
+            return $exception;
+        }
+        $reasonPhrase = $response->getReasonPhrase();
+        switch ($response->getStatusCode()) {
+            case 400:
+                return new BadRequestException($reasonPhrase);
+            case 401:
+                return new UnauthorizedException($reasonPhrase);
+            case 403:
+                return new ForbiddenException($reasonPhrase);
+            case 404:
+                return new NotFoundException($reasonPhrase);
+            case 429:
+                return new TooManyRequestsException($reasonPhrase);
+            case 503:
+                return new ServiceUnavailableException($reasonPhrase);
+            default:
+                return $exception;
         }
     }
 }

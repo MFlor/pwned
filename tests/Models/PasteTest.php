@@ -7,7 +7,7 @@ use PHPUnit\Framework\TestCase;
 
 class PasteTest extends TestCase
 {
-    public function testCanCreateEmptyPaste()
+    public function testCanCreateEmptyPaste(): void
     {
         $paste = new Paste();
         $this->assertInstanceOf(Paste::class, $paste);
@@ -18,13 +18,13 @@ class PasteTest extends TestCase
         $this->assertSame(0, $paste->getEmailCount());
     }
 
-    public function testCanCreatePasteFromData()
+    public function testCanCreatePasteFromData(): void
     {
         $data = new \stdClass();
-        $data->Source = "Pastebin";
-        $data->Id = "8Q0BvKD8";
-        $data->Title = "syslog";
-        $data->Date = "2014-03-04T19:14:54Z";
+        $data->Source = 'Pastebin';
+        $data->Id = '8Q0BvKD8';
+        $data->Title = 'syslog';
+        $data->Date = '2014-03-04T19:14:54Z';
         $data->EmailCount = 139;
 
         $paste = new Paste($data);
@@ -37,10 +37,10 @@ class PasteTest extends TestCase
         $this->assertSame($data->EmailCount, $paste->getEmailCount());
     }
 
-    public function testProvidingInvalidDateSetsDateToNull()
+    public function testProvidingInvalidDateSetsDateToNull(): void
     {
         $data = new \stdClass();
-        $data->Date = "this is not a date";
+        $data->Date = 'this is not a date';
 
         $paste = new Paste($data);
         $this->assertInstanceOf(Paste::class, $paste);

@@ -3,6 +3,7 @@
 namespace MFlor\Pwned\Tests\Repositories\PasswordRepository;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
@@ -19,13 +20,14 @@ class ExceptionTest extends RepositoryTestCase
      * @param string $expectedException
      * @param int $statusCode
      * @param string $reasonPhrase
+     * @throws GuzzleException
      */
     public function testSearchCanHandleBadResponse(
         Response $response,
         string $expectedException,
         int $statusCode,
         string $reasonPhrase
-    ) {
+    ): void {
         $repository = $this->getRepository($response);
 
         try {
@@ -45,12 +47,12 @@ class ExceptionTest extends RepositoryTestCase
      * @param int $statusCode
      * @param string $reasonPhrase
      */
-    public function testoccurrencesCanHandleBadResponse(
+    public function testOccurrencesCanHandleBadResponse(
         Response $response,
         string $expectedException,
         int $statusCode,
         string $reasonPhrase
-    ) {
+    ): void {
         $repository = $this->getRepository($response);
 
         try {
@@ -62,7 +64,10 @@ class ExceptionTest extends RepositoryTestCase
         $this->fail('Failed throwing an exception!');
     }
 
-    public function testUnexpectedExceptionThrowsTheException()
+    /**
+     * @throws GuzzleException
+     */
+    public function testUnexpectedExceptionThrowsTheException(): void
     {
         $response = new Response(402, [], 'Payment required');
 
@@ -70,7 +75,7 @@ class ExceptionTest extends RepositoryTestCase
 
         try {
             $repository->search('abc12');
-        } catch (\Exception $exception) {
+        } catch (\RuntimeException $exception) {
             $this->assertNotInstanceOf(AbstractException::class, $exception);
             return;
         }
