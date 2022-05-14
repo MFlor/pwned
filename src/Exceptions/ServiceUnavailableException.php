@@ -4,7 +4,7 @@ namespace MFlor\Pwned\Exceptions;
 
 class ServiceUnavailableException extends AbstractException
 {
-    const STATUS_CODE = 503;
+    public const STATUS_CODE = 503;
 
     public function __construct(string $reasonPhrase)
     {

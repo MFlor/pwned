@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 
 class BreachTest extends TestCase
 {
-    public function testCanConstructEmpty()
+    public function testCanConstructEmpty(): void
     {
         $breach = new Breach();
 
@@ -31,7 +31,7 @@ class BreachTest extends TestCase
         $this->assertFalse($breach->isSpamList());
     }
 
-    public function testCanConstructWithStdClass()
+    public function testCanConstructWithStdClass(): void
     {
         $breachFactory = new BreachFactory();
         $data = $breachFactory->getBreach();
@@ -57,12 +57,12 @@ class BreachTest extends TestCase
         $this->assertSame($data->IsSpamList, $breach->isSpamList());
     }
 
-    public function testProvidingInvalidDateSetsDatesToNull()
+    public function testProvidingInvalidDateSetsDatesToNull(): void
     {
         $data = new \stdClass();
-        $data->BreachDate = "this is not a date";
-        $data->AddedDate = "this is not a date";
-        $data->ModifiedDate = "this is not a date";
+        $data->BreachDate = 'this is not a date';
+        $data->AddedDate = 'this is not a date';
+        $data->ModifiedDate = 'this is not a date';
 
         $breach = new Breach($data);
         $this->assertInstanceOf(Breach::class, $breach);

@@ -3,17 +3,18 @@
 namespace MFlor\Pwned\Tests\Factories;
 
 use Faker\Factory;
+use Faker\Generator;
 
 class PastesFactory
 {
-    private $faker;
+    private Generator $faker;
 
     public function __construct()
     {
         $this->faker = Factory::create();
     }
 
-    public function getPaste()
+    public function getPaste(): \stdClass
     {
         $paste = new \stdClass();
         $paste->Id = $this->faker->url;
@@ -25,13 +26,14 @@ class PastesFactory
         return $paste;
     }
 
-    public function getPastes()
+    /**
+     * @return \stdClass[]
+     */
+    public function getPastes(): array
     {
-        $pastes = [];
-        $max = $this->faker->numberBetween(3, 10);
-        for ($i = 0; $i < $max; $i++) {
-            $pastes[] = $this->getPaste();
-        }
-        return $pastes;
+        return array_map(
+            fn () => $this->getPaste(),
+            range(1, $this->faker->numberBetween(3, 10))
+        );
     }
 }

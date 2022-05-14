@@ -2,10 +2,10 @@
 
 namespace MFlor\Pwned\Exceptions;
 
-abstract class AbstractException extends \Exception implements ExceptionInterface
+abstract class AbstractException extends \RuntimeException implements ExceptionInterface
 {
-    private $reasonPhrase;
-    private $statusCode;
+    private string $reasonPhrase;
+    private int $statusCode;
 
     public function __construct(string $reasonPhrase, int $statusCode)
     {

@@ -19,10 +19,12 @@ use PHPUnit\Framework\TestCase;
 
 class RepositoryTestCase extends TestCase
 {
-    /** @var array */
-    protected $requestContainer;
+    protected array $requestContainer;
 
-    public function badResponseProvider()
+    /**
+     * @return array[]
+     */
+    public function badResponseProvider(): array
     {
         return [
             'Bad request' => [
@@ -58,7 +60,10 @@ class RepositoryTestCase extends TestCase
         ];
     }
 
-    public function authenticatedBadResponseProvider()
+    /**
+     * @return array[]
+     */
+    public function authenticatedBadResponseProvider(): array
     {
         $responses = $this->badResponseProvider();
         $responses['Unauthorized'] = [
@@ -75,7 +80,7 @@ class RepositoryTestCase extends TestCase
         AbstractException $actual,
         int $statusCode,
         string $reasonPhrase
-    ) {
+    ): void {
         $this->assertInstanceOf($expected, $actual);
         $this->assertSame($statusCode, $actual->getStatusCode());
         $this->assertSame($reasonPhrase, $actual->getReasonPhrase());
@@ -98,12 +103,16 @@ class RepositoryTestCase extends TestCase
         ]);
     }
 
+    /**
+     * @param string $file
+     * @return false|string
+     */
     protected function getTestData(string $file)
     {
         return file_get_contents(sprintf('%s/data/%s', dirname(__DIR__), $file));
     }
 
-    protected function assertRequest(string $requestTarget, string $query = '', array $headers = null)
+    protected function assertRequest(string $requestTarget, string $query = '', array $headers = null): void
     {
         $this->assertCount(1, $this->requestContainer);
         /** @var Request $request */
@@ -114,7 +123,7 @@ class RepositoryTestCase extends TestCase
         $this->assertSame($query, $uri->getQuery());
         if ($headers) {
             foreach ($headers as $key => $value) {
-                $this->assertTrue(array_key_exists($key, $request->getHeaders()));
+                $this->assertArrayHasKey($key, $request->getHeaders());
                 $this->assertSame($value, $request->getHeaderLine($key));
             }
         } else {

@@ -3,6 +3,7 @@
 namespace MFlor\Pwned\Tests\Repositories\PasteRepository;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
@@ -20,13 +21,14 @@ class ExceptionTest extends RepositoryTestCase
      * @param string $expectedException
      * @param int $statusCode
      * @param string $reasonPhrase
+     * @throws GuzzleException
      */
     public function testGetByAccountCanHandleBadResponses(
         Response $response,
         string $expectedException,
         int $statusCode,
         string $reasonPhrase
-    ) {
+    ): void {
         $repository = $this->getRepository($response);
 
         try {
@@ -43,7 +45,10 @@ class ExceptionTest extends RepositoryTestCase
         $this->fail('Failed to throw exception!');
     }
 
-    public function testUnexpectedExceptionThrowsTheException()
+    /**
+     * @throws GuzzleException
+     */
+    public function testUnexpectedExceptionThrowsTheException(): void
     {
         $response = new Response(402, [], 'Payment required');
 

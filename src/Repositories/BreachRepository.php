@@ -2,6 +2,7 @@
 
 namespace MFlor\Pwned\Repositories;
 
+use GuzzleHttp\Exception\GuzzleException;
 use MFlor\Pwned\Exceptions\BadRequestException;
 use MFlor\Pwned\Exceptions\ForbiddenException;
 use MFlor\Pwned\Exceptions\NotFoundException;
@@ -14,15 +15,19 @@ class BreachRepository extends AbstractServiceRepository
 {
     /**
      * Fetch all breaches in HaveIBeenPwned's database
-     * @return array|null
      *
      * @see https://haveibeenpwned.com/API/v3#AllBreaches
+     *
+     * @return Breach[]|null
      *
      * @throws BadRequestException
      * @throws ForbiddenException
      * @throws NotFoundException
      * @throws TooManyRequestsException
      * @throws ServiceUnavailableException
+     * @throws UnauthorizedException
+     * @throws GuzzleException
+     *
      */
     public function getAll(): ?array
     {
@@ -36,13 +41,15 @@ class BreachRepository extends AbstractServiceRepository
      *
      * @param string $domain
      *
-     * @return array|null
+     * @return Breach[]|null
      *
      * @throws BadRequestException
      * @throws ForbiddenException
      * @throws NotFoundException
      * @throws TooManyRequestsException
      * @throws ServiceUnavailableException
+     * @throws UnauthorizedException
+     * @throws GuzzleException
      */
     public function byDomain(string $domain): ?array
     {
@@ -63,15 +70,17 @@ class BreachRepository extends AbstractServiceRepository
      * @throws NotFoundException
      * @throws TooManyRequestsException
      * @throws ServiceUnavailableException
+     * @throws UnauthorizedException
+     * @throws GuzzleException
      */
     public function byName(string $name): ?Breach
     {
         $response = $this->getResponse(sprintf('breach/%s', $name));
 
-        $data = json_decode($response->getBody()->getContents());
-
-        if (json_last_error() === JSON_ERROR_NONE) {
+        try {
+            $data = (object) json_decode($response->getBody()->getContents(), false, 512, JSON_THROW_ON_ERROR);
             return new Breach($data);
+        } catch (\JsonException $exception) {
         }
 
         return null;
@@ -91,9 +100,9 @@ class BreachRepository extends AbstractServiceRepository
      * @see https://haveibeenpwned.com/API/v3#BreachesForAccount
      *
      * @param string $account
-     * @param array $options
+     * @param array<string, string|bool> $options
      *
-     * @return array|null
+     * @return array<Breach>|array<mixed>|null
      *
      * @throws BadRequestException
      * @throws ForbiddenException
@@ -101,17 +110,18 @@ class BreachRepository extends AbstractServiceRepository
      * @throws TooManyRequestsException
      * @throws UnauthorizedException
      * @throws ServiceUnavailableException
+     * @throws GuzzleException
      */
     public function byAccount(string $account, array $options = []): ?array
     {
         $response = $this->getAuthenticatedResponse(sprintf('breachedaccount/%s', urlencode($account)), $options);
-        $data = json_decode($response->getBody()->getContents());
-        if (json_last_error() === JSON_ERROR_NONE) {
-            if (isset($options['truncateResponse']) && $options['truncateResponse'] === false) {
+        try {
+            $data = (array) json_decode($response->getBody()->getContents(), false, 512, JSON_THROW_ON_ERROR);
+            if (key_exists('truncateResponse', $options) && ($options['truncateResponse'] === false)) {
                 return $this->mapBreaches($data);
             }
-
             return $data;
+        } catch (\JsonException $exception) {
         }
 
         return null;
@@ -125,22 +135,25 @@ class BreachRepository extends AbstractServiceRepository
      *
      * @see https://haveibeenpwned.com/API/v3#AllDataClasses
      *
-     * @return array|null
+     * @return array<mixed>|null
      *
      * @throws BadRequestException
      * @throws ForbiddenException
      * @throws NotFoundException
      * @throws TooManyRequestsException
      * @throws ServiceUnavailableException
+     * @throws UnauthorizedException
+     * @throws GuzzleException
      */
-    public function getDataClasses()
+    public function getDataClasses(): ?array
     {
         $response = $this->getResponse('dataclasses');
 
-        $data = json_decode($response->getBody()->getContents(), JSON_PRETTY_PRINT);
-        if (json_last_error() === JSON_ERROR_NONE) {
-            return $data;
+        try {
+            return (array) json_decode($response->getBody()->getContents(), false, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException $exception) {
         }
+
         return null;
     }
 
@@ -149,13 +162,15 @@ class BreachRepository extends AbstractServiceRepository
      *
      * @param string|null $domain
      *
-     * @return array|null
+     * @return Breach[]|null
      *
      * @throws BadRequestException
      * @throws ForbiddenException
      * @throws NotFoundException
      * @throws TooManyRequestsException
      * @throws ServiceUnavailableException
+     * @throws UnauthorizedException
+     * @throws GuzzleException
      */
     private function getAllBreaches(string $domain = null): ?array
     {
@@ -166,21 +181,26 @@ class BreachRepository extends AbstractServiceRepository
 
         $response = $this->getResponse('breaches', $query);
 
-        $data = json_decode($response->getBody()->getContents());
-        if (json_last_error() === JSON_ERROR_NONE) {
+        try {
+            $data = (array) json_decode($response->getBody()->getContents(), false, 512, JSON_THROW_ON_ERROR);
             return $this->mapBreaches($data);
+        } catch (\JsonException $exception) {
         }
+
         return null;
     }
 
     /**
-     * @param array $breaches
-     * @return array
+     * @param array<mixed> $breaches
+     * @return Breach[]
      */
     private function mapBreaches(array $breaches): array
     {
-        return array_map(function (\stdClass $breach) {
-            return new Breach($breach);
-        }, $breaches);
+        return array_reduce($breaches, function ($breaches, $data) {
+            if ($data instanceof \stdClass) {
+                $breaches[] = new Breach($data);
+            }
+            return $breaches;
+        }, []);
     }
 }

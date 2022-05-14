@@ -4,16 +4,11 @@ namespace MFlor\Pwned\Models;
 
 class Paste
 {
-    /** @var string */
-    private $source;
-    /** @var string */
-    private $pasteID;
-    /** @var string */
-    private $title;
-    /** @var \DateTime|null */
-    private $date;
-    /** @var int */
-    private $emailCount;
+    private string $source;
+    private string $pasteID;
+    private string $title;
+    private ?\DateTime $date = null;
+    private int $emailCount;
 
     public function __construct(\stdClass $paste = null)
     {
@@ -30,41 +25,26 @@ class Paste
         $this->emailCount = $paste->EmailCount ?? 0;
     }
 
-    /**
-     * @return string
-     */
     public function getSource(): string
     {
         return $this->source;
     }
 
-    /**
-     * @return string
-     */
     public function getID(): string
     {
         return $this->pasteID;
     }
 
-    /**
-     * @return string
-     */
     public function getTitle(): string
     {
         return $this->title;
     }
 
-    /**
-     * @return \DateTime|null
-     */
     public function getDate(): ?\DateTime
     {
         return $this->date;
     }
 
-    /**
-     * @return int
-     */
     public function getEmailCount(): int
     {
         return $this->emailCount;

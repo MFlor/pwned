@@ -4,36 +4,22 @@ namespace MFlor\Pwned\Models;
 
 class Breach
 {
-    /** @var string */
-    private $name;
-    /** @var string */
-    private $title;
-    /** @var string */
-    private $domain;
-    /** @var \DateTime|null */
-    private $breached;
-    /** @var \DateTime|null */
-    private $added;
-    /** @var \DateTime|null */
-    private $modified;
-    /** @var int */
-    private $pwnCount;
-    /** @var string */
-    private $description;
-    /** @var string */
-    private $logo;
-    /** @var array */
-    private $classes;
-    /** @var bool */
-    private $verified;
-    /** @var bool */
-    private $fabricated;
-    /** @var bool */
-    private $sensitive;
-    /** @var bool */
-    private $retired;
-    /** @var bool */
-    private $spamList;
+    private string $name;
+    private string $title;
+    private string $domain;
+    private ?\DateTime $breached = null;
+    private ?\DateTime $added = null;
+    private ?\DateTime $modified = null;
+    private int $pwnCount;
+    private string $description;
+    private string $logo;
+    /** @var string[] */
+    private array $classes;
+    private bool $verified;
+    private bool $fabricated;
+    private bool $sensitive;
+    private bool $retired;
+    private bool $spamList;
 
     public function __construct(\stdClass $breach = null)
     {
@@ -72,122 +58,80 @@ class Breach
         $this->spamList = $breach->IsSpamList ?? false;
     }
 
-    /**
-     * @return string
-     */
-    public function getName()
+    public function getName(): string
     {
         return $this->name;
     }
 
-    /**
-     * @return string
-     */
-    public function getTitle()
+    public function getTitle(): string
     {
         return $this->title;
     }
 
-    /**
-     * @return string
-     */
-    public function getDomain()
+    public function getDomain(): string
     {
         return $this->domain;
     }
 
-    /**
-     * @return \DateTime|null
-     */
-    public function getBreached()
+    public function getBreached(): ?\DateTime
     {
         return $this->breached;
     }
 
-    /**
-     * @return \DateTime|null
-     */
-    public function getAdded()
+    public function getAdded(): ?\DateTime
     {
         return $this->added;
     }
 
-    /**
-     * @return \DateTime|null
-     */
-    public function getModified()
+    public function getModified(): ?\DateTime
     {
         return $this->modified;
     }
 
-    /**
-     * @return int
-     */
-    public function getPwnCount()
+    public function getPwnCount(): int
     {
         return $this->pwnCount;
     }
 
-    /**
-     * @return string
-     */
-    public function getDescription()
+    public function getDescription(): string
     {
         return $this->description;
     }
 
-    /**
-     * @return string
-     */
-    public function getLogo()
+    public function getLogo(): string
     {
         return $this->logo;
     }
 
     /**
-     * @return array
+     * @return string[]
      */
-    public function getClasses()
+    public function getClasses(): array
     {
         return $this->classes;
     }
 
-    /**
-     * @return bool
-     */
-    public function isVerified()
+    public function isVerified(): bool
     {
         return $this->verified;
     }
 
-    /**
-     * @return bool
-     */
-    public function isFabricated()
+    public function isFabricated(): bool
     {
         return $this->fabricated;
     }
 
-    /**
-     * @return bool
-     */
-    public function isSensitive()
+    public function isSensitive(): bool
     {
         return $this->sensitive;
     }
 
-    /**
-     * @return bool
-     */
-    public function isRetired()
+    public function isRetired(): bool
     {
         return $this->retired;
     }
 
-    /**
-     * @return bool
-     */
-    public function isSpamList()
+    public function isSpamList(): bool
     {
         return $this->spamList;
     }

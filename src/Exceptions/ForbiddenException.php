@@ -4,7 +4,7 @@ namespace MFlor\Pwned\Exceptions;
 
 class ForbiddenException extends AbstractException
 {
-    const STATUS_CODE = 403;
+    public const STATUS_CODE = 403;
 
     public function __construct(string $reasonPhrase)
     {

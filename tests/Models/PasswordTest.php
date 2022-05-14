@@ -7,7 +7,7 @@ use PHPUnit\Framework\TestCase;
 
 class PasswordTest extends TestCase
 {
-    public function testCanGetEmptyPassword()
+    public function testCanGetEmptyPassword(): void
     {
         $password = new Password();
         $this->assertInstanceOf(Password::class, $password);
@@ -15,7 +15,7 @@ class PasswordTest extends TestCase
         $this->assertSame(0, $password->getoccurrences());
     }
 
-    public function testCanGetPasswordFromString()
+    public function testCanGetPasswordFromString(): void
     {
         $string = 'abc:10';
         $password = new Password();
@@ -25,7 +25,7 @@ class PasswordTest extends TestCase
         $this->assertSame(10, $password->getoccurrences());
     }
 
-    public function testCanGetPasswordFromStringAndPrefix()
+    public function testCanGetPasswordFromStringAndPrefix(): void
     {
         $prefix = 'abc';
         $string = 'def:10';
@@ -37,7 +37,7 @@ class PasswordTest extends TestCase
         $this->assertSame(10, $password->getoccurrences());
     }
 
-    public function testCanSetDataOnPassword()
+    public function testCanSetDataOnPassword(): void
     {
         $password = new Password();
         $password->setHash('AbCDEFG');

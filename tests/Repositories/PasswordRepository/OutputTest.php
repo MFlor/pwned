@@ -3,6 +3,7 @@
 namespace MFlor\Pwned\Tests\Repositories\PasswordRepository;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
@@ -12,6 +13,9 @@ use MFlor\Pwned\Tests\Repositories\RepositoryTestCase;
 
 class OutputTest extends RepositoryTestCase
 {
+    /**
+     * @throws GuzzleException
+     */
     public function testCanSearch()
     {
         $testData = $this->getTestData('passwordHashes.txt');
@@ -21,7 +25,6 @@ class OutputTest extends RepositoryTestCase
             $passwords = $repository->search('e38ad');
         } catch (\Exception $exception) {
             $this->fail(sprintf('Test threw unexpected exception (%s)', $exception->getMessage()));
-            return;
         }
         $this->assertRequest('range/e38ad', '', ['Add-Padding' => 'true']);
         $this->assertIsArray($passwords);
@@ -42,7 +45,10 @@ class OutputTest extends RepositoryTestCase
         }
     }
 
-    public function testCanSearchWithoutPadding()
+    /**
+     * @throws GuzzleException
+     */
+    public function testCanSearchWithoutPadding(): void
     {
         $repository = new PasswordRepository($this->getClientWithResponse());
 
@@ -50,12 +56,14 @@ class OutputTest extends RepositoryTestCase
             $repository->search('e38ad', false);
         } catch (\Exception $exception) {
             $this->fail(sprintf('Test threw unexpected exception (%s)', $exception->getMessage()));
-            return;
         }
-        $this->assertRequest('range/e38ad', '', null);
+        $this->assertRequest('range/e38ad');
     }
 
-    public function testCanGetoccurrences()
+    /**
+     * @return void
+     */
+    public function testCanGetOccurrences(): void
     {
         $testData = $this->getTestData('passwordHashes.txt');
         $repository = new PasswordRepository($this->getClientWithResponse($testData));
@@ -64,7 +72,6 @@ class OutputTest extends RepositoryTestCase
             $occurrences = $repository->occurrences('password1');
         } catch (\Exception $exception) {
             $this->fail(sprintf('Test threw unexpected exception (%s)', $exception->getMessage()));
-            return;
         }
         $this->assertRequest(
             'range/' . substr(hash('sha1', 'password1'), 0, 5),
@@ -74,7 +81,7 @@ class OutputTest extends RepositoryTestCase
         $this->assertSame(2401761, $occurrences);
     }
 
-    public function testCanGetoccurrencesWithoutPadding()
+    public function testCanGetOccurrencesWithoutPadding(): void
     {
         $repository = new PasswordRepository($this->getClientWithResponse());
 
@@ -82,13 +89,8 @@ class OutputTest extends RepositoryTestCase
             $repository->occurrences('password1', false);
         } catch (\Exception $exception) {
             $this->fail(sprintf('Test threw unexpected exception (%s)', $exception->getMessage()));
-            return;
         }
-        $this->assertRequest(
-            'range/' . substr(hash('sha1', 'password1'), 0, 5),
-            '',
-            null
-        );
+        $this->assertRequest('range/' . substr(hash('sha1', 'password1'), 0, 5));
     }
 
     /**
@@ -98,7 +100,7 @@ class OutputTest extends RepositoryTestCase
      * @param string $param
      * @param mixed $expected
      */
-    public function testMethodsReturnsNullWhenInvalidBodyIsReturned(string $method, string $param, $expected)
+    public function testMethodsReturnsNullWhenInvalidBodyIsReturned(string $method, string $param, $expected): void
     {
         $mock = new MockHandler([
             new Response(200),
@@ -110,7 +112,10 @@ class OutputTest extends RepositoryTestCase
         $this->assertSame($expected, $repository->$method($param));
     }
 
-    public function methodProvider()
+    /**
+     * @return array[]
+     */
+    public function methodProvider(): array
     {
         return [
             'search' => ['search', 'abc12', null],
