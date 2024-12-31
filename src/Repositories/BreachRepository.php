@@ -172,7 +172,7 @@ class BreachRepository extends AbstractServiceRepository
      * @throws UnauthorizedException
      * @throws GuzzleException
      */
-    private function getAllBreaches(string $domain = null): ?array
+    private function getAllBreaches(?string $domain = null): ?array
     {
         $query = [];
         if ($domain) {
@@ -196,7 +196,7 @@ class BreachRepository extends AbstractServiceRepository
      */
     private function mapBreaches(array $breaches): array
     {
-        return array_reduce($breaches, function ($breaches, $data) {
+        return array_reduce($breaches, function (array $breaches, $data) {
             if ($data instanceof \stdClass) {
                 $breaches[] = new Breach($data);
             }

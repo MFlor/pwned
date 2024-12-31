@@ -112,7 +112,7 @@ class RepositoryTestCase extends TestCase
         return file_get_contents(sprintf('%s/data/%s', dirname(__DIR__), $file));
     }
 
-    protected function assertRequest(string $requestTarget, string $query = '', array $headers = null): void
+    protected function assertRequest(string $requestTarget, string $query = '', ?array $headers = null): void
     {
         $this->assertCount(1, $this->requestContainer);
         /** @var Request $request */
