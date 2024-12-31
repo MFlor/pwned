@@ -21,7 +21,7 @@ class Breach
     private bool $retired;
     private bool $spamList;
 
-    public function __construct(\stdClass $breach = null)
+    public function __construct(?object $breach = null)
     {
         $this->name = $breach->Name ?? '';
         $this->title = $breach->Title ?? '';

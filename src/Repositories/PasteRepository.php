@@ -43,12 +43,12 @@ class PasteRepository extends AbstractServiceRepository
     }
 
     /**
-     * @param array<mixed> $pastes
+     * @param array<mixed, mixed> $pastes
      * @return Paste[]
      */
     private function mapPastes(array $pastes): array
     {
-        return array_reduce($pastes, function ($pastes, $data) {
+        return array_reduce($pastes, function (array $pastes, $data) {
             if ($data instanceof \stdClass) {
                 $pastes[] = new Paste($data);
             }

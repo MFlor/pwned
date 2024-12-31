@@ -19,7 +19,7 @@ abstract class AbstractServiceRepository
     private Client $client;
     private ?string $apiKey;
 
-    public function __construct(Client $client, string $apiKey = null)
+    public function __construct(Client $client, ?string $apiKey = null)
     {
         $this->client = $client;
         $this->apiKey = $apiKey;

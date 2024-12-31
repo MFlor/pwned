@@ -8,11 +8,11 @@ on:
 
 jobs:
   tests:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        php: [7.4, 8.0, 8.1]
+        php: [8.1, 8.2, 8.3, 8.4]
 
     name: PHP ${{ matrix.php }}
 
@@ -30,6 +30,9 @@ jobs:
 
       - name: Run PHP CS Fixer
         run: php-cs-fixer fix src --rules=@PSR12 --allow-risky=yes --dry-run --diff
+        env:
+          # Only ignore environment requirements when PHP 8.4 is being used
+          PHP_CS_FIXER_IGNORE_ENV: ${{ matrix.php == '8.4' && '1' || '' }}
 
       - name: Install dependencies
         run: composer install --prefer-dist --no-interaction --no-progress

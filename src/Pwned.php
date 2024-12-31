@@ -13,7 +13,7 @@ class Pwned
     private PasswordRepository $passwords;
     private PasteRepository $pastes;
 
-    public function __construct(string $apiKey = null)
+    public function __construct(?string $apiKey = null)
     {
         $breachClient = new Client([
             'base_uri' => 'https://haveibeenpwned.com/api/v3/',

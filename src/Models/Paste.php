@@ -10,7 +10,7 @@ class Paste
     private ?\DateTime $date = null;
     private int $emailCount;
 
-    public function __construct(\stdClass $paste = null)
+    public function __construct(?object $paste = null)
     {
         $this->source = $paste->Source ?? '';
         $this->pasteID = $paste->Id ?? '';
