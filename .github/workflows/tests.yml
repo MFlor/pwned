@@ -30,6 +30,9 @@ jobs:
 
       - name: Run PHP CS Fixer
         run: php-cs-fixer fix src --rules=@PSR12 --allow-risky=yes --dry-run --diff
+        env:
+          # Only ignore environment requirements when PHP 8.4 is being used
+          PHP_CS_FIXER_IGNORE_ENV: ${{ matrix.php == '8.4' && '1' || '' }}
 
       - name: Install dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
