@@ -90,12 +90,15 @@ class BreachRepository extends AbstractServiceRepository
      * Get all breaches for an account
      *
      * Options:
-     * - truncateResponse (bool):false - Returns only the name of the breach.
-     *      By default, the response is truncated
-     * - domain (string):null - Filters the result set to only breaches against the domain specified.
+     * - truncateResponse (bool, default: true) - When true, only the name of each breach is returned.
+     *      Pass false to get full Breach models.
+     * - domain (string, default: null) - Filters the result set to only breaches against the domain specified.
      *      It is possible that one site (and consequently domain), is compromised on multiple occasions.
-     * - includeUnverified (bool):false - Returns breaches that have been flagged as "unverified".
-     *      By default, unverified breaches are included when performing a search.
+     * - includeUnverified (bool, default: true) - Whether breaches flagged as "unverified" are included.
+     *      Pass false to exclude them.
+     *
+     * When the response is truncated (the default), an array of objects with a single "Name" property
+     * is returned. When truncateResponse is false, an array of Breach models is returned.
      *
      * @see https://haveibeenpwned.com/API/v3#BreachesForAccount
      *

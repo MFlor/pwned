@@ -107,7 +107,7 @@ class OutputTest extends RepositoryTestCase
         }
         $this->assertRequest(
             'breachedaccount/' . urlencode('test@example.com'),
-            'truncateResponse=0',
+            'truncateResponse=false',
             ['hibp-api-key' => $apiKey]
         );
         $this->assertIsArray($breaches);
@@ -118,11 +118,51 @@ class OutputTest extends RepositoryTestCase
     }
 
     /**
+     * The HIBP API ignores "0" and "1" for boolean parameters,
+     * so booleans must be sent as the strings "true" and "false".
+     *
+     * @dataProvider booleanOptionsProvider
+     *
+     * @param array<string, string|bool> $options
+     * @param string $expectedQuery
+     * @throws \Exception
+     */
+    public function testBooleanOptionsAreSentAsTrueOrFalse(array $options, string $expectedQuery): void
+    {
+        $apiKey = bin2hex(random_bytes(16));
+        $repository = new BreachRepository($this->getClientWithResponse('[]'), $apiKey);
+
+        $repository->byAccount('test@example.com', $options);
+
+        $this->assertRequest(
+            'breachedaccount/' . urlencode('test@example.com'),
+            $expectedQuery,
+            ['hibp-api-key' => $apiKey]
+        );
+    }
+
+    /**
+     * @return array<string, array{0: array<string, string|bool>, 1: string}>
+     */
+    public function booleanOptionsProvider(): array
+    {
+        return [
+            'truncateResponse true' => [['truncateResponse' => true], 'truncateResponse=true'],
+            'includeUnverified false' => [['includeUnverified' => false], 'includeUnverified=false'],
+            'includeUnverified true' => [['includeUnverified' => true], 'includeUnverified=true'],
+            'all options' => [
+                ['truncateResponse' => false, 'domain' => 'adobe.com', 'includeUnverified' => false],
+                'truncateResponse=false&domain=adobe.com&includeUnverified=false',
+            ],
+        ];
+    }
+
+    /**
      * @throws \Exception
      */
     public function testCanGetBreachNamesByAccount(): void
     {
-        $expectedBreaches = $this->factory->getNames();
+        $expectedBreaches = $this->factory->getTruncatedBreaches();
         $testData = json_encode($expectedBreaches);
         $apiKey = bin2hex(random_bytes(16));
 
@@ -140,7 +180,11 @@ class OutputTest extends RepositoryTestCase
         );
         $this->assertIsArray($breaches);
         $this->assertCount(count($expectedBreaches), $breaches);
-        $this->assertSame($expectedBreaches, $breaches);
+        $this->assertEquals($expectedBreaches, $breaches);
+        foreach ($breaches as $breach) {
+            $this->assertInstanceOf(\stdClass::class, $breach);
+            $this->assertTrue(property_exists($breach, 'Name'));
+        }
     }
 
     /**
