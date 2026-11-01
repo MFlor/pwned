@@ -275,5 +275,10 @@ class OutputTest extends RepositoryTestCase
         $this->assertSame($expectedData->IsSensitive, $breach->isSensitive());
         $this->assertSame($expectedData->IsRetired, $breach->isRetired());
         $this->assertSame($expectedData->IsSpamList, $breach->isSpamList());
+        $this->assertSame($expectedData->IsMalware, $breach->isMalware());
+        $this->assertSame($expectedData->IsSubscriptionFree, $breach->isSubscriptionFree());
+        $this->assertSame($expectedData->IsStealerLog, $breach->isStealerLog());
+        $this->assertSame($expectedData->Attribution, $breach->getAttribution());
+        $this->assertSame($expectedData->DisclosureUrl, $breach->getDisclosureUrl());
     }
 }

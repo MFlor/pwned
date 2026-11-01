@@ -32,6 +32,11 @@ class BreachFactory
         $breach->IsSensitive = $this->faker->boolean;
         $breach->IsRetired = $this->faker->boolean;
         $breach->IsSpamList = $this->faker->boolean;
+        $breach->IsMalware = $this->faker->boolean;
+        $breach->IsSubscriptionFree = $this->faker->boolean;
+        $breach->IsStealerLog = $this->faker->boolean;
+        $breach->Attribution = $this->faker->optional()->name;
+        $breach->DisclosureUrl = $this->faker->optional()->url;
 
         return $breach;
     }
