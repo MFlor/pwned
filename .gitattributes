@@ -9,3 +9,4 @@ tests/data/ntlmHashesPadded.txt -text
 /.gitignore export-ignore
 /codecov.yml export-ignore
 /phpunit.xml export-ignore
+/phpstan.neon.dist export-ignore

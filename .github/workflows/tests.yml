@@ -35,7 +35,7 @@ jobs:
         run: php-cs-fixer fix src --rules=@PSR12 --allow-risky=yes --dry-run --diff
 
       - name: Run PHPStan
-        run: phpstan analyse -l 9 src
+        run: phpstan analyse
 
   tests:
     name: PHP ${{ matrix.php }} (${{ matrix.dependencies }} dependencies)

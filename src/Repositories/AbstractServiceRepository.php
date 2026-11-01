@@ -96,7 +96,11 @@ abstract class AbstractServiceRepository
      *
      * @param string $method
      * @param string $uri
-     * @param array<string, mixed> $options Guzzle request options
+     * @param array{
+     *     query?: array<string, string>,
+     *     headers?: array<string, string>,
+     *     json?: array<string, string>
+     * } $options Guzzle request options
      *
      * @return ResponseInterface
      *
