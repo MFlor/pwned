@@ -42,13 +42,9 @@ abstract class AbstractServiceRepository
      */
     protected function getResponse(string $uri, array $query = []): ResponseInterface
     {
-        try {
-            return $this->client->get($uri, [
-                RequestOptions::QUERY => $this->normalizeQuery($query)
-            ]);
-        } catch (RequestException $exception) {
-            throw $this->handleRequestException($exception);
-        }
+        return $this->send('GET', $uri, [
+            RequestOptions::QUERY => $this->normalizeQuery($query),
+        ]);
     }
 
     /**
@@ -67,21 +63,149 @@ abstract class AbstractServiceRepository
      */
     protected function getAuthenticatedResponse(string $uri, array $query = []): ResponseInterface
     {
-        // Without an API key the header is omitted, and the API responds with 401 Unauthorized.
-        // (Guzzle 8 rejects null header values, so the header can't be sent empty.)
-        $headers = [];
-        if ($this->apiKey !== null) {
-            $headers['hibp-api-key'] = $this->apiKey;
-        }
+        return $this->send('GET', $uri, [
+            RequestOptions::QUERY => $this->normalizeQuery($query),
+            RequestOptions::HEADERS => $this->getAuthenticationHeaders(),
+        ]);
+    }
 
+    /**
+     * @param string $uri
+     * @param array<string, string> $body Sent as JSON
+     *
+     * @return ResponseInterface
+     *
+     * @throws BadRequestException
+     * @throws ForbiddenException
+     * @throws NotFoundException
+     * @throws ServiceUnavailableException
+     * @throws TooManyRequestsException
+     * @throws UnauthorizedException
+     * @throws GuzzleException
+     */
+    protected function postAuthenticatedResponse(string $uri, array $body): ResponseInterface
+    {
+        return $this->send('POST', $uri, [
+            RequestOptions::JSON => $body,
+            RequestOptions::HEADERS => $this->getAuthenticationHeaders(),
+        ]);
+    }
+
+    /**
+     * Sends a request, converting API error responses into this library's exceptions
+     *
+     * @param string $method
+     * @param string $uri
+     * @param array<string, mixed> $options Guzzle request options
+     *
+     * @return ResponseInterface
+     *
+     * @throws BadRequestException
+     * @throws ForbiddenException
+     * @throws NotFoundException
+     * @throws ServiceUnavailableException
+     * @throws TooManyRequestsException
+     * @throws UnauthorizedException
+     * @throws GuzzleException
+     */
+    protected function send(string $method, string $uri, array $options = []): ResponseInterface
+    {
         try {
-            return $this->client->get($uri, [
-                RequestOptions::QUERY => $this->normalizeQuery($query),
-                RequestOptions::HEADERS => $headers,
-            ]);
+            return $this->client->request($method, $uri, $options);
         } catch (RequestException $exception) {
             throw $this->handleRequestException($exception);
         }
+    }
+
+    /**
+     * @param ResponseInterface $response
+     * @param bool $associative Decode JSON objects as associative arrays instead of stdClass
+     *
+     * @return mixed The decoded body, or null if it isn't valid JSON
+     */
+    protected function decodeJson(ResponseInterface $response, bool $associative = false): mixed
+    {
+        try {
+            return json_decode((string) $response->getBody(), $associative, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException $exception) {
+            return null;
+        }
+    }
+
+    /**
+     * Decodes a JSON array of strings, e.g. ["netflix.com", "spotify.com"]
+     *
+     * @param ResponseInterface $response
+     *
+     * @return string[]|null Null if the body isn't a valid JSON array
+     */
+    protected function decodeStringList(ResponseInterface $response): ?array
+    {
+        $data = $this->decodeJson($response, true);
+        if (!is_array($data)) {
+            return null;
+        }
+
+        return array_values(array_filter($data, 'is_string'));
+    }
+
+    /**
+     * Decodes a JSON object of string arrays, e.g. {"alias1": ["Adobe"], "alias2": ["Adobe", "Gawker"]}
+     *
+     * @param ResponseInterface $response
+     *
+     * @return array<string, string[]>|null Null if the body isn't a valid JSON object
+     */
+    protected function decodeStringListMap(ResponseInterface $response): ?array
+    {
+        $data = $this->decodeJson($response, true);
+        if (!is_array($data)) {
+            return null;
+        }
+
+        $result = [];
+        foreach ($data as $key => $values) {
+            if (is_array($values)) {
+                // Keys like "123" are turned into integers by json_decode, so cast them back
+                $result[(string) $key] = array_values(array_filter($values, 'is_string'));
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Decodes a JSON array of objects, e.g. [{"Name": "Adobe"}, {"Name": "Gawker"}]
+     *
+     * @param ResponseInterface $response
+     *
+     * @return \stdClass[]|null Null if the body isn't a valid JSON array
+     */
+    protected function decodeObjectList(ResponseInterface $response): ?array
+    {
+        $data = $this->decodeJson($response);
+        if (!is_array($data)) {
+            return null;
+        }
+
+        return array_values(array_filter($data, function ($item): bool {
+            return $item instanceof \stdClass;
+        }));
+    }
+
+    /**
+     * Without an API key the header is omitted, and the API responds with 401 Unauthorized.
+     * (Guzzle 8 rejects null header values, so the header can't be sent empty.)
+     *
+     * @return array<string, string>
+     */
+    private function getAuthenticationHeaders(): array
+    {
+        if ($this->apiKey === null) {
+            return [];
+        }
+
+        return ['hibp-api-key' => $this->apiKey];
     }
 
     /**
@@ -124,21 +248,72 @@ abstract class AbstractServiceRepository
         }
         $response = $exception->getResponse();
         $reasonPhrase = $response->getReasonPhrase();
+        $apiMessage = $this->getApiMessage($response);
         switch ($response->getStatusCode()) {
             case 400:
-                return new BadRequestException($reasonPhrase);
+                return new BadRequestException($reasonPhrase, $apiMessage);
             case 401:
-                return new UnauthorizedException($reasonPhrase);
+                return new UnauthorizedException($reasonPhrase, $apiMessage);
             case 403:
-                return new ForbiddenException($reasonPhrase);
+                return new ForbiddenException($reasonPhrase, $apiMessage);
             case 404:
-                return new NotFoundException($reasonPhrase);
+                return new NotFoundException($reasonPhrase, $apiMessage);
             case 429:
-                return new TooManyRequestsException($reasonPhrase);
+                return new TooManyRequestsException($reasonPhrase, $this->getRetryAfter($response), $apiMessage);
             case 503:
-                return new ServiceUnavailableException($reasonPhrase);
+                return new ServiceUnavailableException($reasonPhrase, $apiMessage);
             default:
                 return $exception;
         }
+    }
+
+    /**
+     * Extracts the explanation the API includes in error responses, which is either
+     * JSON like {"statusCode": 401, "message": "Access denied due to invalid hibp-api-key."}
+     * or plain text.
+     */
+    private function getApiMessage(ResponseInterface $response): ?string
+    {
+        $body = trim((string) $response->getBody());
+        if ($body === '') {
+            return null;
+        }
+
+        try {
+            $data = json_decode($body, false, 512, JSON_THROW_ON_ERROR);
+            if ($data instanceof \stdClass && isset($data->message) && is_string($data->message)) {
+                return $data->message;
+            }
+            return null;
+        } catch (\JsonException $exception) {
+        }
+
+        // Accept short plain-text explanations, but not HTML error pages (e.g. from Cloudflare)
+        if ($body[0] !== '<' && strlen($body) <= 500) {
+            return $body;
+        }
+
+        return null;
+    }
+
+    /**
+     * The retry-after header is normally a number of seconds, but may also be an HTTP date
+     */
+    private function getRetryAfter(ResponseInterface $response): ?int
+    {
+        $value = trim($response->getHeaderLine('Retry-After'));
+        if ($value === '') {
+            return null;
+        }
+        if (ctype_digit($value)) {
+            return (int) $value;
+        }
+
+        $timestamp = strtotime($value);
+        if ($timestamp === false) {
+            return null;
+        }
+
+        return max(0, $timestamp - time());
     }
 }
