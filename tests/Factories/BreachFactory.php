@@ -52,10 +52,16 @@ class BreachFactory
         );
     }
 
-    public function getNames(): array
+    /**
+     * The shape the API returns for breaches by account when the response is truncated:
+     * [{"Name": "Adobe"}, {"Name": "Gawker"}]
+     *
+     * @return \stdClass[]
+     */
+    public function getTruncatedBreaches(): array
     {
         return array_map(
-            fn () => $this->faker->unique()->company(),
+            fn () => (object) ['Name' => $this->faker->unique()->company()],
             range(1, $this->faker->numberBetween(3, 10))
         );
     }

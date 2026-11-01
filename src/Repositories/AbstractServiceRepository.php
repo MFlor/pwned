@@ -27,7 +27,7 @@ abstract class AbstractServiceRepository
 
     /**
      * @param string $uri
-     * @param array<string, string> $query
+     * @param array<string, string|bool> $query
      *
      * @return ResponseInterface
      *
@@ -43,7 +43,7 @@ abstract class AbstractServiceRepository
     {
         try {
             return $this->client->get($uri, [
-                RequestOptions::QUERY => $query
+                RequestOptions::QUERY => $this->normalizeQuery($query)
             ]);
         } catch (RequestException $exception) {
             throw $this->handleRequestException($exception);
@@ -68,7 +68,7 @@ abstract class AbstractServiceRepository
     {
         try {
             return $this->client->get($uri, [
-                RequestOptions::QUERY => $query,
+                RequestOptions::QUERY => $this->normalizeQuery($query),
                 RequestOptions::HEADERS => [
                     'hibp-api-key' => $this->apiKey
                 ]
@@ -76,6 +76,25 @@ abstract class AbstractServiceRepository
         } catch (RequestException $exception) {
             throw $this->handleRequestException($exception);
         }
+    }
+
+    /**
+     * The HIBP API only understands the literal strings "true" and "false" for boolean
+     * parameters, but Guzzle (via http_build_query) serialises booleans as "1" and "0",
+     * which the API silently ignores.
+     *
+     * @param array<string, string|bool> $query
+     *
+     * @return array<string, string>
+     */
+    private function normalizeQuery(array $query): array
+    {
+        return array_map(static function ($value): string {
+            if (is_bool($value)) {
+                return $value ? 'true' : 'false';
+            }
+            return $value;
+        }, $query);
     }
 
     /**

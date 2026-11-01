@@ -6,24 +6,33 @@ on:
       - main
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
-  tests:
+  coverage:
+    name: Coverage
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v7
 
-      - name: Install Dependencies
-        run: composer install --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+          coverage: pcov
 
-      - name: Execute tests (Unit and Feature tests) via PHPUnit
-        env:
-          XDEBUG_MODE: coverage
-        run: php -dpcov.enabled=1 vendor/bin/phpunit --testdox --coverage-clover clover.xml
+      - name: Install dependencies
+        run: composer update --prefer-dist --no-interaction --no-progress
 
-      - name: Upload coverage to Codecov.io
-        shell: bash
-        run: bash <(curl -s https://codecov.io/bash) -t ${CODECOV_TOKEN} -f ${GITHUB_WORKSPACE}/clover.xml -C ${GITHUB_SHA}
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      - name: Execute tests with coverage
+        run: vendor/bin/phpunit --coverage-clover clover.xml
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v7
+        with:
+          files: clover.xml
+          token: ${{ secrets.CODECOV_TOKEN }}

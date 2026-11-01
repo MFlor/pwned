@@ -1,0 +1,14 @@
+version: 2
+updates:
+  # "widen" keeps existing constraints and adds new majors (e.g. ^7.15 -> ^7.15 || ^8.0),
+  # which is the right behaviour for a library.
+  - package-ecosystem: composer
+    directory: /
+    schedule:
+      interval: monthly
+    versioning-strategy: widen
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
