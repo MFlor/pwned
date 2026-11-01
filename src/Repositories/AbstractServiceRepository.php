@@ -154,7 +154,9 @@ abstract class AbstractServiceRepository
      *
      * @param ResponseInterface $response
      *
-     * @return array<string, string[]>|null Null if the body isn't a valid JSON object
+     * Note that numeric keys like "123" become integers, as in any PHP array.
+     *
+     * @return array<int|string, string[]>|null Null if the body isn't a valid JSON object
      */
     protected function decodeStringListMap(ResponseInterface $response): ?array
     {
@@ -166,8 +168,7 @@ abstract class AbstractServiceRepository
         $result = [];
         foreach ($data as $key => $values) {
             if (is_array($values)) {
-                // Keys like "123" are turned into integers by json_decode, so cast them back
-                $result[(string) $key] = array_values(array_filter($values, 'is_string'));
+                $result[$key] = array_values(array_filter($values, 'is_string'));
             }
         }
 
