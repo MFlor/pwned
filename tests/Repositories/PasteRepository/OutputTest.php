@@ -54,6 +54,16 @@ class OutputTest extends RepositoryTestCase
         }
     }
 
+    public function testApiKeyHeaderIsOmittedWithoutAnApiKey(): void
+    {
+        $repository = new PasteRepository($this->getClientWithResponse('[]'));
+
+        $repository->byAccount('test@example.com');
+
+        // Asserts that only the User-Agent header was sent
+        $this->assertRequest('pasteaccount/' . urlencode('test@example.com'));
+    }
+
     /**
      * @throws GuzzleException
      */

@@ -20,6 +20,11 @@ class Breach
     private bool $sensitive;
     private bool $retired;
     private bool $spamList;
+    private bool $malware;
+    private bool $subscriptionFree;
+    private bool $stealerLog;
+    private ?string $attribution;
+    private ?string $disclosureUrl;
 
     public function __construct(?object $breach = null)
     {
@@ -56,6 +61,11 @@ class Breach
         $this->sensitive = $breach->IsSensitive ?? false;
         $this->retired = $breach->IsRetired ?? false;
         $this->spamList = $breach->IsSpamList ?? false;
+        $this->malware = $breach->IsMalware ?? false;
+        $this->subscriptionFree = $breach->IsSubscriptionFree ?? false;
+        $this->stealerLog = $breach->IsStealerLog ?? false;
+        $this->attribution = $breach->Attribution ?? null;
+        $this->disclosureUrl = $breach->DisclosureUrl ?? null;
     }
 
     public function getName(): string
@@ -134,5 +144,45 @@ class Breach
     public function isSpamList(): bool
     {
         return $this->spamList;
+    }
+
+    /**
+     * Whether the breach was sourced from malware rather than a compromise of an online service
+     */
+    public function isMalware(): bool
+    {
+        return $this->malware;
+    }
+
+    /**
+     * Whether the breach is subscription-free (only relevant for domain searches)
+     */
+    public function isSubscriptionFree(): bool
+    {
+        return $this->subscriptionFree;
+    }
+
+    /**
+     * Whether the breach was sourced from stealer logs
+     */
+    public function isStealerLog(): bool
+    {
+        return $this->stealerLog;
+    }
+
+    /**
+     * Attribution sometimes requested by the party that provided the data, or null
+     */
+    public function getAttribution(): ?string
+    {
+        return $this->attribution;
+    }
+
+    /**
+     * A URL to the breached organisation's own public disclosure of the breach, or null
+     */
+    public function getDisclosureUrl(): ?string
+    {
+        return $this->disclosureUrl;
     }
 }

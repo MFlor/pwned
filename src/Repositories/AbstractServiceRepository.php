@@ -3,6 +3,7 @@
 namespace MFlor\Pwned\Repositories;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\BadResponseException;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\RequestOptions;
@@ -27,7 +28,7 @@ abstract class AbstractServiceRepository
 
     /**
      * @param string $uri
-     * @param array<string, string> $query
+     * @param array<string, string|bool> $query
      *
      * @return ResponseInterface
      *
@@ -43,7 +44,7 @@ abstract class AbstractServiceRepository
     {
         try {
             return $this->client->get($uri, [
-                RequestOptions::QUERY => $query
+                RequestOptions::QUERY => $this->normalizeQuery($query)
             ]);
         } catch (RequestException $exception) {
             throw $this->handleRequestException($exception);
@@ -66,16 +67,40 @@ abstract class AbstractServiceRepository
      */
     protected function getAuthenticatedResponse(string $uri, array $query = []): ResponseInterface
     {
+        // Without an API key the header is omitted, and the API responds with 401 Unauthorized.
+        // (Guzzle 8 rejects null header values, so the header can't be sent empty.)
+        $headers = [];
+        if ($this->apiKey !== null) {
+            $headers['hibp-api-key'] = $this->apiKey;
+        }
+
         try {
             return $this->client->get($uri, [
-                RequestOptions::QUERY => $query,
-                RequestOptions::HEADERS => [
-                    'hibp-api-key' => $this->apiKey
-                ]
+                RequestOptions::QUERY => $this->normalizeQuery($query),
+                RequestOptions::HEADERS => $headers,
             ]);
         } catch (RequestException $exception) {
             throw $this->handleRequestException($exception);
         }
+    }
+
+    /**
+     * The HIBP API only understands the literal strings "true" and "false" for boolean
+     * parameters, but Guzzle (via http_build_query) serialises booleans as "1" and "0",
+     * which the API silently ignores.
+     *
+     * @param array<string, string|bool> $query
+     *
+     * @return array<string, string>
+     */
+    private function normalizeQuery(array $query): array
+    {
+        return array_map(static function ($value): string {
+            if (is_bool($value)) {
+                return $value ? 'true' : 'false';
+            }
+            return $value;
+        }, $query);
     }
 
     /**
@@ -92,9 +117,12 @@ abstract class AbstractServiceRepository
      */
     protected function handleRequestException(RequestException $exception): \RuntimeException
     {
-        if (!$response = $exception->getResponse()) {
+        // Only BadResponseException (4xx/5xx) carries a response in both Guzzle 7 and 8;
+        // Guzzle 8 removed getResponse() from RequestException itself.
+        if (!$exception instanceof BadResponseException) {
             return $exception;
         }
+        $response = $exception->getResponse();
         $reasonPhrase = $response->getReasonPhrase();
         switch ($response->getStatusCode()) {
             case 400:

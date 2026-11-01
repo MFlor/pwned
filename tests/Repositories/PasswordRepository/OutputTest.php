@@ -46,6 +46,36 @@ class OutputTest extends RepositoryTestCase
     }
 
     /**
+     * The real API separates lines with CRLF and, when padding is enabled,
+     * adds fake entries with an occurrence count of 0 that must be discarded.
+     *
+     * @throws GuzzleException
+     */
+    public function testSearchDiscardsPaddingAndHandlesCrlf(): void
+    {
+        $testData = $this->getTestData('passwordHashesPadded.txt');
+        $repository = new PasswordRepository($this->getClientWithResponse($testData));
+
+        $passwords = $repository->search('e38ad');
+
+        $this->assertIsArray($passwords);
+        $this->assertCount(10, $passwords);
+        $this->assertSame(array_keys($passwords), range(0, 9));
+        foreach ($passwords as $password) {
+            $this->assertGreaterThan(0, $password->getOccurrences());
+            $this->assertMatchesRegularExpression('/^[0-9a-f]{40}$/', (string) $password->getHash());
+        }
+    }
+
+    public function testCanGetOccurrencesFromPaddedResponse(): void
+    {
+        $testData = $this->getTestData('passwordHashesPadded.txt');
+        $repository = new PasswordRepository($this->getClientWithResponse($testData));
+
+        $this->assertSame(2401761, $repository->occurrences('password1'));
+    }
+
+    /**
      * @throws GuzzleException
      */
     public function testCanSearchWithoutPadding(): void

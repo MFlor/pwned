@@ -29,6 +29,11 @@ class BreachTest extends TestCase
         $this->assertFalse($breach->isSensitive());
         $this->assertFalse($breach->isRetired());
         $this->assertFalse($breach->isSpamList());
+        $this->assertFalse($breach->isMalware());
+        $this->assertFalse($breach->isSubscriptionFree());
+        $this->assertFalse($breach->isStealerLog());
+        $this->assertNull($breach->getAttribution());
+        $this->assertNull($breach->getDisclosureUrl());
     }
 
     public function testCanConstructWithStdClass(): void
@@ -55,6 +60,11 @@ class BreachTest extends TestCase
         $this->assertSame($data->IsSensitive, $breach->isSensitive());
         $this->assertSame($data->IsRetired, $breach->isRetired());
         $this->assertSame($data->IsSpamList, $breach->isSpamList());
+        $this->assertSame($data->IsMalware, $breach->isMalware());
+        $this->assertSame($data->IsSubscriptionFree, $breach->isSubscriptionFree());
+        $this->assertSame($data->IsStealerLog, $breach->isStealerLog());
+        $this->assertSame($data->Attribution, $breach->getAttribution());
+        $this->assertSame($data->DisclosureUrl, $breach->getDisclosureUrl());
     }
 
     public function testProvidingInvalidDateSetsDatesToNull(): void
