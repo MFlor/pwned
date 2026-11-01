@@ -9,6 +9,7 @@ use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
 use MFlor\Pwned\Exceptions\AbstractException;
 use MFlor\Pwned\Models\Breach;
+use MFlor\Pwned\Models\DataClass;
 use MFlor\Pwned\Repositories\BreachRepository;
 use MFlor\Pwned\Tests\Factories\BreachFactory;
 use MFlor\Pwned\Tests\Repositories\RepositoryTestCase;
@@ -251,7 +252,135 @@ class OutputTest extends RepositoryTestCase
             'byName' => ['byName', 'Adobe'],
             'byAccount' => ['byAccount', 'test@example.com'],
             'getDataClasses' => ['getDataClasses'],
+            'latest' => ['latest'],
+            'getDataClassDescriptions' => ['getDataClassDescriptions'],
+            'searchByRange' => ['searchByRange', '6B5917'],
         ];
+    }
+
+    /**
+     * @throws GuzzleException
+     */
+    public function testCanGetLatestBreach(): void
+    {
+        $expectedBreach = $this->factory->getBreach();
+        $repository = new BreachRepository($this->getClientWithResponse((string) json_encode($expectedBreach)));
+
+        $breach = $repository->latest();
+
+        $this->assertRequest('latestBreach');
+        $this->assertInstanceOf(Breach::class, $breach);
+        $this->assertBreachMatchesData($expectedBreach, $breach);
+    }
+
+    /**
+     * @dataProvider spamListFilterProvider
+     * @throws GuzzleException
+     */
+    public function testCanFilterBreachesBySpamList(string $method, array $arguments, string $expectedQuery): void
+    {
+        $repository = new BreachRepository($this->getClientWithResponse('[]'));
+
+        $repository->$method(...$arguments);
+
+        $this->assertRequest('breaches', $expectedQuery);
+    }
+
+    /**
+     * @return array<string, array{0: string, 1: array<mixed>, 2: string}>
+     */
+    public function spamListFilterProvider(): array
+    {
+        return [
+            'all spam lists' => ['getAll', [true], 'isSpamList=true'],
+            'all non-spam lists' => ['getAll', [false], 'isSpamList=false'],
+            'no filter' => ['getAll', [null], ''],
+            'spam lists by domain' => ['byDomain', ['adobe.com', true], 'domain=adobe.com&isSpamList=true'],
+            'non-spam lists by domain' => ['byDomain', ['adobe.com', false], 'domain=adobe.com&isSpamList=false'],
+        ];
+    }
+
+    /**
+     * @throws GuzzleException
+     */
+    public function testCanGetDataClassDescriptions(): void
+    {
+        // The API returns lowercase keys
+        $testData = '[{"name":"Academic records","description":"School or university records."},'
+            . '{"name":"Account balances","description":"Balances of financial accounts."}]';
+        $repository = new BreachRepository($this->getClientWithResponse($testData));
+
+        $dataClasses = $repository->getDataClassDescriptions();
+
+        $this->assertRequest('dataClasses/descriptions');
+        $this->assertIsArray($dataClasses);
+        $this->assertCount(2, $dataClasses);
+        $this->assertInstanceOf(DataClass::class, $dataClasses[0]);
+        $this->assertSame('Academic records', $dataClasses[0]->getName());
+        $this->assertSame('School or university records.', $dataClasses[0]->getDescription());
+        $this->assertSame('Account balances', $dataClasses[1]->getName());
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function testCanSearchByRange(): void
+    {
+        $apiKey = bin2hex(random_bytes(16));
+        $repository = new BreachRepository($this->getClientWithResponse($this->getRangeResponse()), $apiKey);
+
+        $results = $repository->searchByRange('6B5917');
+
+        $this->assertRequest('breachedaccount/range/6b5917', '', ['hibp-api-key' => $apiKey]);
+        $this->assertSame([
+            '6b5917c6c0aade0c085843d66e4944e108c4a4cd' => ['Adobe', 'Gawker', 'Stratfor'],
+            '6b5917000000000000000000000000000000abcd' => ['Dropbox'],
+        ], $results);
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function testCanGetBreachesByAccountAnonymously(): void
+    {
+        $apiKey = bin2hex(random_bytes(16));
+        $repository = new BreachRepository($this->getClientWithResponse($this->getRangeResponse()), $apiKey);
+
+        // Addresses are trimmed and lowercased before hashing, as they're case-insensitive
+        $breaches = $repository->byAccountAnonymously(' Multiple-Breaches@hibp-integration-tests.com ');
+
+        // Only the first 6 characters of the hash are sent, never the address
+        $this->assertRequest('breachedaccount/range/6b5917', '', ['hibp-api-key' => $apiKey]);
+        $this->assertSame(['Adobe', 'Gawker', 'Stratfor'], $breaches);
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function testByAccountAnonymouslyReturnsEmptyArrayWhenNotFound(): void
+    {
+        $repository = new BreachRepository($this->getClientWithResponse($this->getRangeResponse()), 'key');
+
+        // Hashes to a different range than the one in the response, so it can't match
+        $this->assertSame([], $repository->byAccountAnonymously('not-pwned@example.com'));
+    }
+
+    public function testByAccountAnonymouslyReturnsEmptyArrayOnInvalidJson(): void
+    {
+        $repository = new BreachRepository($this->getClientWithResponse('invalid json'), 'key');
+
+        $this->assertSame([], $repository->byAccountAnonymously('test@example.com'));
+    }
+
+    /**
+     * The response for prefix 6B5917, as documented by HIBP, plus one more entry
+     */
+    private function getRangeResponse(): string
+    {
+        return (string) json_encode([
+            ['hashSuffix' => 'C6C0AADE0C085843D66E4944E108C4A4CD', 'websites' => ['Adobe', 'Gawker', 'Stratfor']],
+            ['hashSuffix' => '000000000000000000000000000000ABCD', 'websites' => ['Dropbox']],
+        ]);
     }
 
     private function assertBreachMatchesData(\stdClass $expectedData, Breach $breach): void
