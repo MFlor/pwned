@@ -16,6 +16,8 @@ Install the library with composer:
 composer require mflor/pwned
 ```
 
+The library requires PHP 8.0 or newer, and works with both Guzzle 7 and Guzzle 8.
+
 ### Authorisation
 
 Authorisation is required for all APIs that enable searching HIBP by email address,
