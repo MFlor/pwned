@@ -78,6 +78,79 @@ class OutputTest extends RepositoryTestCase
     /**
      * @throws GuzzleException
      */
+    public function testCanSearchNtlm(): void
+    {
+        $testData = $this->getTestData('ntlmHashesPadded.txt');
+        $repository = new PasswordRepository($this->getClientWithResponse($testData));
+
+        $passwords = $repository->searchNtlm('8846F');
+
+        $this->assertRequest('range/8846F', 'mode=ntlm', ['Add-Padding' => 'true']);
+        $this->assertIsArray($passwords);
+        // 10 lines, of which 2 are padding
+        $this->assertCount(8, $passwords);
+        foreach ($passwords as $password) {
+            $this->assertGreaterThan(0, $password->getOccurrences());
+            // NTLM hashes are 32 characters: the 5 character prefix and a 27 character suffix
+            $this->assertMatchesRegularExpression('/^8846f[0-9a-f]{27}$/', (string) $password->getHash());
+        }
+    }
+
+    /**
+     * @throws GuzzleException
+     */
+    public function testCanSearchNtlmWithoutPadding(): void
+    {
+        $repository = new PasswordRepository($this->getClientWithResponse());
+
+        $repository->searchNtlm('8846F', false);
+
+        $this->assertRequest('range/8846F', 'mode=ntlm');
+    }
+
+    /**
+     * @dataProvider ntlmHashProvider
+     * @throws GuzzleException
+     */
+    public function testCanGetOccurrencesByNtlmHash(string $hash): void
+    {
+        $testData = $this->getTestData('ntlmHashesPadded.txt');
+        $repository = new PasswordRepository($this->getClientWithResponse($testData));
+
+        $occurrences = $repository->occurrencesByNtlmHash($hash);
+
+        $this->assertRequest('range/8846f', 'mode=ntlm', ['Add-Padding' => 'true']);
+        $this->assertSame(52372427, $occurrences);
+    }
+
+    /**
+     * The NTLM hash of "password", in both cases
+     *
+     * @return string[][]
+     */
+    public function ntlmHashProvider(): array
+    {
+        return [
+            'uppercase' => ['8846F7EAEE8FB117AD06BDD830B7586C'],
+            'lowercase' => ['8846f7eaee8fb117ad06bdd830b7586c'],
+        ];
+    }
+
+    /**
+     * @throws GuzzleException
+     */
+    public function testOccurrencesByNtlmHashIsZeroWhenNotFound(): void
+    {
+        $testData = $this->getTestData('ntlmHashesPadded.txt');
+        $repository = new PasswordRepository($this->getClientWithResponse($testData));
+
+        // Matches the prefix, but not any of the suffixes (including the padding entries)
+        $this->assertSame(0, $repository->occurrencesByNtlmHash('8846F0123456789ABCDEF0123456789A'));
+    }
+
+    /**
+     * @throws GuzzleException
+     */
     public function testCanSearchWithoutPadding(): void
     {
         $repository = new PasswordRepository($this->getClientWithResponse());

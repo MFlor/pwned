@@ -2,10 +2,7 @@
 
 namespace MFlor\Pwned\Repositories;
 
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\BadResponseException;
 use GuzzleHttp\Exception\GuzzleException;
-use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\RequestOptions;
 use MFlor\Pwned\Exceptions\BadRequestException;
 use MFlor\Pwned\Exceptions\ForbiddenException;
@@ -13,17 +10,12 @@ use MFlor\Pwned\Exceptions\NotFoundException;
 use MFlor\Pwned\Exceptions\ServiceUnavailableException;
 use MFlor\Pwned\Exceptions\TooManyRequestsException;
 use MFlor\Pwned\Models\Password;
-use Psr\Http\Message\ResponseInterface;
 
-class PasswordRepository
+/**
+ * The Pwned Passwords API is free and doesn't need an API key.
+ */
+class PasswordRepository extends AbstractServiceRepository
 {
-    private Client $client;
-
-    public function __construct(Client $client)
-    {
-        $this->client = $client;
-    }
-
     /**
      * Search for passwords in the HaveIBeenPwned database,
      * by the passwords first five characters, when hashed with SHA-1
@@ -47,22 +39,32 @@ class PasswordRepository
      */
     public function search(string $prefix, bool $pad = true): ?array
     {
-        $response = $this->getResponse(sprintf('range/%s', $prefix), $pad);
+        return $this->searchRange($prefix, $pad, false);
+    }
 
-        // The API separates lines with CRLF
-        $data = preg_split('/\R/', $response->getBody()->getContents(), -1, PREG_SPLIT_NO_EMPTY);
-
-        if ($data) {
-            $passwords = array_map(function (string $string) use ($prefix) {
-                return (new Password())->fromString($string, $prefix);
-            }, $data);
-
-            // Padded entries always have an occurrence count of 0 and should be discarded
-            return array_values(array_filter($passwords, function (Password $password) {
-                return $password->getOccurrences() > 0;
-            }));
-        }
-        return null;
+    /**
+     * Search for passwords in the HaveIBeenPwned database,
+     * by the first five characters of their NTLM hash.
+     * Returns an array of Password models, where the hash is the full NTLM hash.
+     *
+     * Padded entries are discarded, as with search().
+     * @see Password
+     * @see https://haveibeenpwned.com/API/v3#PwnedPasswordsNTLM
+     *
+     * @param string $prefix
+     * @param bool $pad
+     * @return Password[]|null
+     *
+     * @throws BadRequestException
+     * @throws ForbiddenException
+     * @throws NotFoundException
+     * @throws TooManyRequestsException
+     * @throws ServiceUnavailableException
+     * @throws GuzzleException
+     */
+    public function searchNtlm(string $prefix, bool $pad = true): ?array
+    {
+        return $this->searchRange($prefix, $pad, true);
     }
 
     /**
@@ -78,26 +80,22 @@ class PasswordRepository
      * @throws NotFoundException
      * @throws TooManyRequestsException
      * @throws ServiceUnavailableException
+     * @throws GuzzleException
      */
     public function occurrences(string $password, bool $pad = true): int
     {
-        $hash = hash('sha1', $password);
-        if ($passwords = $this->search(substr($hash, 0, 5), $pad)) {
-            foreach ($passwords as $pswrd) {
-                if ($pswrd->getHash() === $hash) {
-                    return $pswrd->getoccurrences();
-                }
-            }
-        }
-
-        return 0;
+        return $this->findOccurrences(hash('sha1', $password), $pad, false);
     }
 
     /**
-     * @param string $uri
-     * @param bool $pad
+     * Returns the occurrence count for a password, given its NTLM hash.
+     * This is useful when auditing systems that store NTLM hashes, such as Active Directory.
      *
-     * @return ResponseInterface
+     * @see https://haveibeenpwned.com/API/v3#PwnedPasswordsNTLM
+     *
+     * @param string $hash The full 32-character NTLM hash
+     * @param bool $pad
+     * @return int
      *
      * @throws BadRequestException
      * @throws ForbiddenException
@@ -106,39 +104,68 @@ class PasswordRepository
      * @throws ServiceUnavailableException
      * @throws GuzzleException
      */
-    private function getResponse(string $uri, bool $pad = true): ResponseInterface
+    public function occurrencesByNtlmHash(string $hash, bool $pad = true): int
     {
-        try {
-            $headers = [];
-            if ($pad) {
-                $headers = [
-                    'Add-Padding' => 'true'
-                ];
-            }
-            return $this->client->get($uri, [
-                RequestOptions::HEADERS => $headers
-            ]);
-        } catch (RequestException $exception) {
-            // Only BadResponseException (4xx/5xx) carries a response in both Guzzle 7 and 8
-            if (!$exception instanceof BadResponseException) {
-                throw $exception;
-            }
-            $response = $exception->getResponse();
-            $reasonPhrase = $response->getReasonPhrase();
-            switch ($response->getStatusCode()) {
-                case 400:
-                    throw new BadRequestException($reasonPhrase);
-                case 403:
-                    throw new ForbiddenException($reasonPhrase);
-                case 404:
-                    throw new NotFoundException($reasonPhrase);
-                case 429:
-                    throw new TooManyRequestsException($reasonPhrase);
-                case 503:
-                    throw new ServiceUnavailableException($reasonPhrase);
-                default:
-                    throw $exception;
+        return $this->findOccurrences($hash, $pad, true);
+    }
+
+    /**
+     * @throws BadRequestException
+     * @throws ForbiddenException
+     * @throws NotFoundException
+     * @throws TooManyRequestsException
+     * @throws ServiceUnavailableException
+     * @throws GuzzleException
+     */
+    private function findOccurrences(string $hash, bool $pad, bool $ntlm): int
+    {
+        $hash = strtolower($hash);
+        if ($passwords = $this->searchRange(substr($hash, 0, 5), $pad, $ntlm)) {
+            foreach ($passwords as $password) {
+                if ($password->getHash() === $hash) {
+                    return $password->getOccurrences();
+                }
             }
         }
+
+        return 0;
+    }
+
+    /**
+     * @return Password[]|null
+     *
+     * @throws BadRequestException
+     * @throws ForbiddenException
+     * @throws NotFoundException
+     * @throws TooManyRequestsException
+     * @throws ServiceUnavailableException
+     * @throws GuzzleException
+     */
+    private function searchRange(string $prefix, bool $pad, bool $ntlm): ?array
+    {
+        $options = [];
+        if ($pad) {
+            $options[RequestOptions::HEADERS] = ['Add-Padding' => 'true'];
+        }
+        if ($ntlm) {
+            $options[RequestOptions::QUERY] = ['mode' => 'ntlm'];
+        }
+
+        $response = $this->send('GET', sprintf('range/%s', $prefix), $options);
+
+        // The API separates lines with CRLF
+        $data = preg_split('/\R/', (string) $response->getBody(), -1, PREG_SPLIT_NO_EMPTY);
+
+        if ($data) {
+            $passwords = array_map(function (string $string) use ($prefix) {
+                return (new Password())->fromString($string, $prefix);
+            }, $data);
+
+            // Padded entries always have an occurrence count of 0 and should be discarded
+            return array_values(array_filter($passwords, function (Password $password) {
+                return $password->getOccurrences() > 0;
+            }));
+        }
+        return null;
     }
 }
