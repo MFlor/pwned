@@ -13,7 +13,7 @@
     "require": {
         "php": "^8.0",
         "ext-json": "*",
-        "guzzlehttp/guzzle": "^7.15.2"
+        "guzzlehttp/guzzle": "^7.15.2 || ^8.0.1"
     },
     "require-dev": {
         "phpunit/phpunit": "^9.6",

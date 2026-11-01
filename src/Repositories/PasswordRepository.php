@@ -3,6 +3,7 @@
 namespace MFlor\Pwned\Repositories;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\BadResponseException;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\RequestOptions;
@@ -118,9 +119,11 @@ class PasswordRepository
                 RequestOptions::HEADERS => $headers
             ]);
         } catch (RequestException $exception) {
-            if (!$response = $exception->getResponse()) {
+            // Only BadResponseException (4xx/5xx) carries a response in both Guzzle 7 and 8
+            if (!$exception instanceof BadResponseException) {
                 throw $exception;
             }
+            $response = $exception->getResponse();
             $reasonPhrase = $response->getReasonPhrase();
             switch ($response->getStatusCode()) {
                 case 400:

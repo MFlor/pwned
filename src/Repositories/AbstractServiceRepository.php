@@ -3,6 +3,7 @@
 namespace MFlor\Pwned\Repositories;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\BadResponseException;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\RequestOptions;
@@ -66,12 +67,17 @@ abstract class AbstractServiceRepository
      */
     protected function getAuthenticatedResponse(string $uri, array $query = []): ResponseInterface
     {
+        // Without an API key the header is omitted, and the API responds with 401 Unauthorized.
+        // (Guzzle 8 rejects null header values, so the header can't be sent empty.)
+        $headers = [];
+        if ($this->apiKey !== null) {
+            $headers['hibp-api-key'] = $this->apiKey;
+        }
+
         try {
             return $this->client->get($uri, [
                 RequestOptions::QUERY => $this->normalizeQuery($query),
-                RequestOptions::HEADERS => [
-                    'hibp-api-key' => $this->apiKey
-                ]
+                RequestOptions::HEADERS => $headers,
             ]);
         } catch (RequestException $exception) {
             throw $this->handleRequestException($exception);
@@ -111,9 +117,12 @@ abstract class AbstractServiceRepository
      */
     protected function handleRequestException(RequestException $exception): \RuntimeException
     {
-        if (!$response = $exception->getResponse()) {
+        // Only BadResponseException (4xx/5xx) carries a response in both Guzzle 7 and 8;
+        // Guzzle 8 removed getResponse() from RequestException itself.
+        if (!$exception instanceof BadResponseException) {
             return $exception;
         }
+        $response = $exception->getResponse();
         $reasonPhrase = $response->getReasonPhrase();
         switch ($response->getStatusCode()) {
             case 400:

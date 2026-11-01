@@ -117,6 +117,16 @@ class OutputTest extends RepositoryTestCase
         }
     }
 
+    public function testApiKeyHeaderIsOmittedWithoutAnApiKey(): void
+    {
+        $repository = new BreachRepository($this->getClientWithResponse('[]'));
+
+        $repository->byAccount('test@example.com');
+
+        // Asserts that only the User-Agent header was sent
+        $this->assertRequest('breachedaccount/' . urlencode('test@example.com'));
+    }
+
     /**
      * The HIBP API ignores "0" and "1" for boolean parameters,
      * so booleans must be sent as the strings "true" and "false".
