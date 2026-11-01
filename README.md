@@ -55,15 +55,20 @@ $pwned->breaches()->byName('Adobe');
 
 // Get breaches by account (Requires API key)
 $pwned->breaches()->byAccount('test@example.com');
-// Returns an array of Breach Models (see MFlor/Pwned/Models/Breach.php)
+// By default the response is truncated to just the breach names,
+// and returns an array of objects with a single Name property:
+// [{"Name": "Adobe"}, {"Name": "Gawker"}]
 
 // Options for breaches by account:
 $options = [
-    'truncateResponse' => true // Show full breach or just the name (Default: true)
-    'domain' => 'adobe.com' // Filter results by a domain (Default: null)
-    'includeUnverified' => true // Include unverified breaches (Default: false)
+    'truncateResponse' => false, // true returns only breach names, false returns full Breach models (Default: true)
+    'domain' => 'adobe.com', // Filter results by a domain (Default: null)
+    'includeUnverified' => false, // Include unverified breaches (Default: true)
 ];
 $pwned->breaches()->byAccount('test@example.com', $options);
+// With 'truncateResponse' => false, returns an array of Breach Models (see MFlor/Pwned/Models/Breach.php)
+
+// If the account isn't found in any breaches, a NotFoundException is thrown (see Exceptions below)
 
 // Get all data classes
 $pwned->breaches()->getDataClasses();
@@ -73,7 +78,7 @@ $pwned->breaches()->getDataClasses();
 ### Pastes
 ```php
 // Get all pastes by account (Requires API key)
-$pwned->pastes()->byAccount('test@example.com')
+$pwned->pastes()->byAccount('test@example.com');
 // Returns an array of Paste Models (see MFlor/Pwned/Models/Paste.php)
 ```
 
@@ -89,22 +94,23 @@ $pwned->passwords()->occurrences('password1');
 
 Both search and occurrences takes a second boolean parameter, to disable padding for request.
 Be aware, that this is less secure, than having the padding enabled, which is default.
+The padded entries added by the API are discarded, so they are never included in the results.
 Read more about the padding in [Troy Hunt's blog post](https://www.troyhunt.com/enhancing-pwned-passwords-privacy-with-padding/)
 
 ### Exceptions
 This package will throw custom exceptions if a Client Error occures.
 
-`\Mflor\Pwned\Exceptions\BadRequestException` is thrown on status code 400
+`\MFlor\Pwned\Exceptions\BadRequestException` is thrown on status code 400
 
-`\Mflor\Pwned\Exceptions\UnauthorizedException` is thrown on status code 401
+`\MFlor\Pwned\Exceptions\UnauthorizedException` is thrown on status code 401
 
-`\Mflor\Pwned\Exceptions\ForbiddenException` is thrown on status code 403
+`\MFlor\Pwned\Exceptions\ForbiddenException` is thrown on status code 403
 
-`\Mflor\Pwned\Exceptions\NotFoundException` is thrown on status code 404
+`\MFlor\Pwned\Exceptions\NotFoundException` is thrown on status code 404
 
-`\Mflor\Pwned\Exceptions\TooManyRequestsException` is thrown on status code 429
+`\MFlor\Pwned\Exceptions\TooManyRequestsException` is thrown on status code 429
 
-`\Mflor\Pwned\Exceptions\ServiceUnavailableException` is thrown on status code 503
+`\MFlor\Pwned\Exceptions\ServiceUnavailableException` is thrown on status code 503
  
 
 | Code |                   Description                                                                   |
