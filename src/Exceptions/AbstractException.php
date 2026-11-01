@@ -6,12 +6,19 @@ abstract class AbstractException extends \RuntimeException implements ExceptionI
 {
     private string $reasonPhrase;
     private int $statusCode;
+    private ?string $apiMessage;
 
-    public function __construct(string $reasonPhrase, int $statusCode)
+    public function __construct(string $reasonPhrase, int $statusCode, ?string $apiMessage = null)
     {
         $this->reasonPhrase = $reasonPhrase;
         $this->statusCode = $statusCode;
-        parent::__construct(sprintf('%s: %s', $this->statusCode, $this->reasonPhrase));
+        $this->apiMessage = $apiMessage;
+
+        $message = sprintf('%s: %s', $this->statusCode, $this->reasonPhrase);
+        if ($apiMessage !== null && $apiMessage !== '') {
+            $message .= sprintf(' (%s)', $apiMessage);
+        }
+        parent::__construct($message);
     }
 
     public function getStatusCode(): int
@@ -22,5 +29,14 @@ abstract class AbstractException extends \RuntimeException implements ExceptionI
     public function getReasonPhrase(): string
     {
         return $this->reasonPhrase;
+    }
+
+    /**
+     * The explanation the API included in the response body, if any.
+     * For example: "Access denied due to invalid hibp-api-key."
+     */
+    public function getApiMessage(): ?string
+    {
+        return $this->apiMessage;
     }
 }

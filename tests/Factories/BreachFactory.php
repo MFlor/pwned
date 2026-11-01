@@ -32,6 +32,11 @@ class BreachFactory
         $breach->IsSensitive = $this->faker->boolean;
         $breach->IsRetired = $this->faker->boolean;
         $breach->IsSpamList = $this->faker->boolean;
+        $breach->IsMalware = $this->faker->boolean;
+        $breach->IsSubscriptionFree = $this->faker->boolean;
+        $breach->IsStealerLog = $this->faker->boolean;
+        $breach->Attribution = $this->faker->optional()->name;
+        $breach->DisclosureUrl = $this->faker->optional()->url;
 
         return $breach;
     }
@@ -52,10 +57,16 @@ class BreachFactory
         );
     }
 
-    public function getNames(): array
+    /**
+     * The shape the API returns for breaches by account when the response is truncated:
+     * [{"Name": "Adobe"}, {"Name": "Gawker"}]
+     *
+     * @return \stdClass[]
+     */
+    public function getTruncatedBreaches(): array
     {
         return array_map(
-            fn () => $this->faker->unique()->company(),
+            fn () => (object) ['Name' => $this->faker->unique()->company()],
             range(1, $this->faker->numberBetween(3, 10))
         );
     }

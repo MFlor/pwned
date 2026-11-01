@@ -112,13 +112,17 @@ class RepositoryTestCase extends TestCase
         return file_get_contents(sprintf('%s/data/%s', dirname(__DIR__), $file));
     }
 
-    protected function assertRequest(string $requestTarget, string $query = '', ?array $headers = null): void
-    {
+    protected function assertRequest(
+        string $requestTarget,
+        string $query = '',
+        ?array $headers = null,
+        string $method = 'GET'
+    ): void {
         $this->assertCount(1, $this->requestContainer);
         /** @var Request $request */
         $request = $this->requestContainer[0]['request'];
         $uri = $request->getUri();
-        $this->assertSame('GET', $request->getMethod());
+        $this->assertSame($method, $request->getMethod());
         $this->assertSame($requestTarget, $uri->getPath());
         $this->assertSame($query, $uri->getQuery());
         if ($headers) {
@@ -133,5 +137,31 @@ class RepositoryTestCase extends TestCase
                 ]
             ], $request->getHeaders());
         }
+    }
+
+    /**
+     * @param array<string, string> $expected
+     */
+    protected function assertJsonBody(array $expected): void
+    {
+        /** @var Request $request */
+        $request = $this->requestContainer[0]['request'];
+        $this->assertSame('application/json', $request->getHeaderLine('Content-Type'));
+        $this->assertSame($expected, json_decode((string) $request->getBody(), true));
+    }
+
+    /**
+     * A repository whose single request gets the given response, or throws the given exception
+     *
+     * @template T of \MFlor\Pwned\Repositories\AbstractServiceRepository
+     * @param class-string<T> $class
+     * @param Response|\Throwable $response
+     * @return T
+     */
+    protected function getRepositoryWithResponse(string $class, $response, ?string $apiKey = 'api-key')
+    {
+        $client = new Client(['handler' => HandlerStack::create(new MockHandler([$response]))]);
+
+        return new $class($client, $apiKey);
     }
 }

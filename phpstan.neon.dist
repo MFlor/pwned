@@ -1,0 +1,12 @@
+parameters:
+    level: 9
+    paths:
+        - src
+    ignoreErrors:
+        # Guzzle 8 declares exact types for every request option, which options passed in by
+        # users (array<string, mixed>) can't be proven to match at level 9. Guzzle validates
+        # them at runtime. Guzzle 7 has no such types, so this only matches with Guzzle 8.
+        -
+            message: '#^Parameter \#1 \$config of class GuzzleHttp\\Client constructor expects#'
+            path: src/Pwned.php
+            reportUnmatched: false

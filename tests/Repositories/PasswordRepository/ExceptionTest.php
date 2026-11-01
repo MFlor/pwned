@@ -67,6 +67,31 @@ class ExceptionTest extends RepositoryTestCase
     }
 
     /**
+     * @dataProvider badResponseProvider
+     *
+     * @param Response $response
+     * @param string $expectedException
+     * @param int $statusCode
+     * @param string $reasonPhrase
+     */
+    public function testNtlmMethodsCanHandleBadResponse(
+        Response $response,
+        string $expectedException,
+        int $statusCode,
+        string $reasonPhrase
+    ): void {
+        foreach (['searchNtlm' => '8846F', 'occurrencesByNtlmHash' => '8846F7EAEE8FB117AD06BDD830B7586C'] as $method => $arg) {
+            $repository = $this->getRepository($response);
+            try {
+                $repository->$method($arg);
+                $this->fail(sprintf('%s failed throwing an exception!', $method));
+            } catch (AbstractException $exception) {
+                $this->assertException($expectedException, $exception, $statusCode, $reasonPhrase);
+            }
+        }
+    }
+
+    /**
      * @throws GuzzleException
      */
     public function testUnexpectedExceptionThrowsTheException(): void

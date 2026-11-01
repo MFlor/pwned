@@ -146,6 +146,56 @@ class ExceptionTest extends RepositoryTestCase
     }
 
     /**
+     * @dataProvider badResponseProvider
+     *
+     * @param Response $response
+     * @param string $expectedException
+     * @param int $statusCode
+     * @param string $reasonPhrase
+     */
+    public function testUnauthenticatedEndpointsCanHandleBadResponses(
+        Response $response,
+        string $expectedException,
+        int $statusCode,
+        string $reasonPhrase
+    ): void {
+        foreach (['latest', 'getDataClassDescriptions'] as $method) {
+            $repository = $this->getRepository($response);
+            try {
+                $repository->$method();
+                $this->fail(sprintf('%s failed throwing an exception!', $method));
+            } catch (AbstractException $exception) {
+                $this->assertException($expectedException, $exception, $statusCode, $reasonPhrase);
+            }
+        }
+    }
+
+    /**
+     * @dataProvider authenticatedBadResponseProvider
+     *
+     * @param Response $response
+     * @param string $expectedException
+     * @param int $statusCode
+     * @param string $reasonPhrase
+     */
+    public function testRangeSearchesCanHandleBadResponses(
+        Response $response,
+        string $expectedException,
+        int $statusCode,
+        string $reasonPhrase
+    ): void {
+        foreach (['searchByRange' => '6B5917', 'byAccountAnonymously' => 'test@example.com'] as $method => $arg) {
+            $repository = $this->getRepository($response);
+            try {
+                $repository->$method($arg);
+                $this->fail(sprintf('%s failed throwing an exception!', $method));
+            } catch (AbstractException $exception) {
+                $this->assertException($expectedException, $exception, $statusCode, $reasonPhrase);
+            }
+        }
+    }
+
+    /**
      * @throws GuzzleException
      */
     public function testUnexpectedExceptionThrowsTheException(): void
