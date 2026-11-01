@@ -1,5 +1,5 @@
 # Pwned
-[![Build Status](https://github.com/MFlor/pwned/actions/workflows/tests.yml/badge.svg)](https://codecov.io/gh/MFlor/pwned)
+[![Build Status](https://github.com/MFlor/pwned/actions/workflows/tests.yml/badge.svg)](https://github.com/MFlor/pwned/actions/workflows/tests.yml)
 [![Coverage Status](https://codecov.io/gh/MFlor/pwned/branch/main/graph/badge.svg?token=L0Y15FOKTP)](https://codecov.io/gh/MFlor/pwned)
 [![Total Downloads](https://img.shields.io/packagist/dt/mflor/pwned)](https://packagist.org/packages/mflor/pwned)
 [![Latest Version](https://img.shields.io/packagist/v/mflor/pwned)](https://packagist.org/packages/mflor/pwned)
