@@ -5,8 +5,11 @@ namespace MFlor\Pwned;
 use GuzzleHttp\Client;
 use GuzzleHttp\RequestOptions;
 use MFlor\Pwned\Repositories\BreachRepository;
+use MFlor\Pwned\Repositories\DomainRepository;
 use MFlor\Pwned\Repositories\PasswordRepository;
 use MFlor\Pwned\Repositories\PasteRepository;
+use MFlor\Pwned\Repositories\StealerLogRepository;
+use MFlor\Pwned\Repositories\SubscriptionRepository;
 
 class Pwned
 {
@@ -23,6 +26,9 @@ class Pwned
     private BreachRepository $breaches;
     private PasswordRepository $passwords;
     private PasteRepository $pastes;
+    private StealerLogRepository $stealerLogs;
+    private DomainRepository $domains;
+    private SubscriptionRepository $subscription;
 
     /**
      * @param string|null $apiKey HIBP API key, required for searching by email address and domain
@@ -41,6 +47,9 @@ class Pwned
         $breachClient = $this->createClient('https://haveibeenpwned.com/api/v3/', 'application/json', $options);
         $this->breaches = new BreachRepository($breachClient, $apiKey);
         $this->pastes = new PasteRepository($breachClient, $apiKey);
+        $this->stealerLogs = new StealerLogRepository($breachClient, $apiKey);
+        $this->domains = new DomainRepository($breachClient, $apiKey);
+        $this->subscription = new SubscriptionRepository($breachClient, $apiKey);
 
         $passwordClient = $this->createClient('https://api.pwnedpasswords.com/', 'text/plain', $options);
         $this->passwords = new PasswordRepository($passwordClient);
@@ -59,6 +68,21 @@ class Pwned
     public function passwords(): PasswordRepository
     {
         return $this->passwords;
+    }
+
+    public function stealerLogs(): StealerLogRepository
+    {
+        return $this->stealerLogs;
+    }
+
+    public function domains(): DomainRepository
+    {
+        return $this->domains;
+    }
+
+    public function subscription(): SubscriptionRepository
+    {
+        return $this->subscription;
     }
 
     /**

@@ -8,8 +8,11 @@ use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Response;
 use MFlor\Pwned\Pwned;
 use MFlor\Pwned\Repositories\BreachRepository;
+use MFlor\Pwned\Repositories\DomainRepository;
 use MFlor\Pwned\Repositories\PasswordRepository;
 use MFlor\Pwned\Repositories\PasteRepository;
+use MFlor\Pwned\Repositories\StealerLogRepository;
+use MFlor\Pwned\Repositories\SubscriptionRepository;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
 
@@ -25,6 +28,9 @@ class PwnedTest extends TestCase
         $this->assertInstanceOf(BreachRepository::class, $pwned->breaches());
         $this->assertInstanceOf(PasteRepository::class, $pwned->pastes());
         $this->assertInstanceOf(PasswordRepository::class, $pwned->passwords());
+        $this->assertInstanceOf(StealerLogRepository::class, $pwned->stealerLogs());
+        $this->assertInstanceOf(DomainRepository::class, $pwned->domains());
+        $this->assertInstanceOf(SubscriptionRepository::class, $pwned->subscription());
     }
 
     public function testDefaultsAreUsed(): void
