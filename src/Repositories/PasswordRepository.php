@@ -27,6 +27,9 @@ class PasswordRepository
      * Search for passwords in the HaveIBeenPwned database,
      * by the passwords first five characters, when hashed with SHA-1
      * Returns an array of Password models
+     *
+     * When padding is enabled, the API adds fake entries with an occurrence count of 0,
+     * which are discarded, so only real results are returned.
      * @see Password
      * @see https://haveibeenpwned.com/API/v3#SearchingPwnedPasswordsByRange
      *
@@ -45,12 +48,18 @@ class PasswordRepository
     {
         $response = $this->getResponse(sprintf('range/%s', $prefix), $pad);
 
-        $data = preg_split('/\n/', $response->getBody()->getContents(), -1, PREG_SPLIT_NO_EMPTY);
+        // The API separates lines with CRLF
+        $data = preg_split('/\R/', $response->getBody()->getContents(), -1, PREG_SPLIT_NO_EMPTY);
 
         if ($data) {
-            return array_map(function (string $string) use ($prefix) {
+            $passwords = array_map(function (string $string) use ($prefix) {
                 return (new Password())->fromString($string, $prefix);
             }, $data);
+
+            // Padded entries always have an occurrence count of 0 and should be discarded
+            return array_values(array_filter($passwords, function (Password $password) {
+                return $password->getOccurrences() > 0;
+            }));
         }
         return null;
     }

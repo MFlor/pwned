@@ -1,0 +1,2 @@
+# Keep the CRLF line endings in this fixture - they mirror the real API response
+tests/data/passwordHashesPadded.txt -text
